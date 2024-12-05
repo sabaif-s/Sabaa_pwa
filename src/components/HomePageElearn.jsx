@@ -1,4 +1,5 @@
 import React,{useEffect, useState} from 'react';
+import { Link } from 'react-router-dom';
 import ScreenSize from '../hooks/ScreenSize';
 const  HomePageELearn = () => {
     const {largeMobile}=ScreenSize();
@@ -53,7 +54,6 @@ const  HomePageELearn = () => {
             clearInterval(interval);
         };
     }, [animateInDivStart]);
-    
     return (
         <div className='w-full h-screen bg-gradient-to-t from-cyan-700 to-sky-300 flex justify-center items-center' >
         <div className='w-3/4 relative  bg-red-100' style={{height:height}} >
@@ -63,12 +63,16 @@ const  HomePageELearn = () => {
                            <span className={`${animateDiv > 1 ? "text-white":""}  ${animateDiv == 1 ? "animate-flip3dB":""} text-xl font-bold`} >Interactive Lessons</span>
                     </div>
                  </div>
+                 <Link to="/videoTutor">
                  <div className={`w-full flex py-4 justify-center items-start rounded-full ${slideDown < 2 ? "opacity-0":""}  ${slideDown == 2 ? "animate-slideDownFast":""}   ${largeMobile ? "h-40 bottom-20":"h-24 bottom-12"}  bg-[#7DA0CA] absolute z-40`} >
-                 <div className={`w-2/3 ${animateDiv > 2 ? "animate-bgChange3":""} rounded-lg ${animateDiv == 2 && animateDiv < 4 ? "animate-flip3d":""}  flex justify-center items-start h-full bg-white text-gray-400`}
+                 <div
+                //  onClick={handleVideoClicked}
+                 className={`w-2/3 ${animateDiv > 2 ? "animate-bgChange3":""} cursor-pointer rounded-lg ${animateDiv == 2 && animateDiv < 4 ? "animate-flip3d":""}  flex justify-center items-start h-full bg-white text-gray-400`}
                      >
                            <span className={`${animateDiv > 2 ? "text-white":""}  ${animateDiv == 2 ? "animate-flip3dB":""} text-xl font-bold`} >Video Tutorials</span>
                     </div>
                  </div>
+                 </Link>
                  <div className={`w-full flex py-4 justify-center items-start rounded-full  ${slideDown < 3 ? "opacity-0":""} ${slideDown == 3 ? "animate-slideDownFast":""}   ${largeMobile ? "h-40 bottom-40":"h-24 bottom-24"}  bg-[#5483B3] absolute z-30`} >
                  <div className={`w-2/3 ${animateDiv > 3 ? "animate-bgChange2":""} rounded-lg ${animateDiv == 3 && animateDiv < 5 ? "animate-flip3d":""}  flex justify-center items-start h-full bg-white text-gray-400`}
                      >
