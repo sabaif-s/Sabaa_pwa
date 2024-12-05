@@ -9,7 +9,7 @@ const  ContentGrade = () => {
   </h1>
 </div>
              
-              <div className='w-full flex flex-col items-center gap-y-4 h-auto p-4' >
+              <div className='w-full flex flex-col items-center gap-y-4 h-auto p-4 animate-fadeIn' >
                       <div  className='w-2/3 cursor-pointer  flex justify-center items-center rounded-full h-64 bg-white p-4'>
                         <img src="/grade 9.png" className='w-full h-full rounded-lg' alt="" />
                       </div>
