@@ -1,9 +1,11 @@
 import React,{useEffect,useState} from 'react';
-
+import firstVideo from '../assets/videos/firstVideo.mp4';
+import secondVideo from '../assets/videos/secondVideo.mp4';
 const  VideoTutor = () => {
     const [activeButton,setActiveButton]=useState(0);
     const [backColorGrade,setBackColorGrade]=useState("bg-gradient-to-r from-green-500 to-green-300");
     const [backColorYVideos,setBackColorYVideos]=useState("bg-gradient-to-r from-blue-500 to-blue-300");
+    const [clickedList,setClickedList]=useState(0);
 
     useEffect(()=>{
       const inactive="bg-gradient-to-r from-blue-500 to-blue-300";
@@ -50,7 +52,17 @@ const  VideoTutor = () => {
   </div>
                        </div>
                        <div className='mt-4 w-full h-auto py-4 bg-white flex flex-col gap-y-4 justify-start items-center' >
-                       <div className="w-full h-12 flex justify-between items-center p-2 bg-gradient-to-r from-green-500 to-green-300 hover:shadow-lg transition-shadow duration-300">
+                       <div
+                       onClick={()=>{
+                        if(clickedList == 1){
+                            setClickedList(0);
+                        }
+                        else{
+                            setClickedList(1);
+                        }
+                        
+                       }}
+                       className="w-full h-12 flex justify-between items-center p-2 bg-gradient-to-r from-green-500 to-green-300 hover:shadow-lg transition-shadow duration-300">
   
   <div className="w-1/2 h-full flex justify-center items-center overflow-x-hidden">
     <span className="text-2xl text-white font-semibold w-full text-center overflow-x-hidden hover:text-gray-200 transition-colors duration-300">
@@ -79,7 +91,26 @@ const  VideoTutor = () => {
     </div>
   </div>
 </div>
-<div className="w-full h-12 flex justify-between items-center p-2 bg-gradient-to-r from-green-500 to-green-300 hover:shadow-lg transition-shadow duration-300">
+{
+    clickedList == 1 && (
+        <div className='w-full p-4 bg-white h-44' >
+             <video controls muted autoPlay src={firstVideo} className='w-full h-full' ></video>
+        </div>
+
+    )
+}
+
+<div
+ onClick={()=>{
+    if(clickedList == 2){
+              setClickedList(0);
+    }
+    else {
+        setClickedList(2);
+    }
+    
+   }}
+className="w-full h-12 flex justify-between items-center p-2 bg-gradient-to-r from-green-500 to-green-300 hover:shadow-lg transition-shadow duration-300">
   
   <div className="w-1/2 h-full flex justify-center items-center overflow-x-hidden">
     <span className="text-2xl text-white font-semibold w-full text-center overflow-x-hidden hover:text-gray-200 transition-colors duration-300">
@@ -108,6 +139,14 @@ const  VideoTutor = () => {
     </div>
   </div>
 </div>
+{
+    clickedList == 2 && (
+        <div className='w-full p-4 bg-white h-44' >
+             <video controls muted autoPlay src={secondVideo} className='w-full h-full' ></video>
+        </div>
+
+    )
+}
                        </div>
         </div>
     );

@@ -1,14 +1,30 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  build:{
+    outDir:"dist",
+    manifest:true
+  },
   plugins: [
     react({
       fastRefresh: true, // Ensure fastRefresh is enabled
     }),
+    viteStaticCopy({
+      targets: [
+        {
+          src: 'src/sw.js', // Source file
+          dest: '', // Destination folder relative to `dist/`
+        },
+      ],
+    }),
     VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.js',
       registerType: 'autoUpdate', // Register the service worker with auto update
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'], // Include assets like icons
       manifest: {
@@ -40,7 +56,9 @@ export default defineConfig({
           },
         ],
       },
-      injectManifest: false, // Prevent default service worker generation
+      // injectManifest: {
+      //   swSrc: './src/sw.js', // Path to your custom service worker file
+      // }, // Prevent default service worker generation
     }),
   ],
 })
