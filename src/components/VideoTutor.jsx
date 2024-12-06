@@ -14,6 +14,7 @@ const  VideoTutor = () => {
     const [pauseFirst,setPauseFirst]=useState(false);
     const [downloadInProgressFirst,setDownloadInProgressFirst]=useState(false);
     const [startDownloadFirstVideo,setStartDownloadFirstVideo]=useState(false);
+    const [fullyDownloadedFirst,setFullyDownloadedFirst]=useState(false);
     // useEffect(() => {
     //   let interval;
     //   if (downloadPercentage < 100) {
@@ -118,13 +119,13 @@ const  VideoTutor = () => {
                 createdAt: new Date(), // Optional metadata
             });
             console.log(`Video saved with ID: ${id}`);
-            const clearAllRecords = async () => {
-              const db = await initDBChunk();
+          //   const clearAllRecords = async () => {
+          //     const db = await initDBChunk();
           
-              // Clear all records from the object store
-              await db.clear('videoChunks');
-              console.log('All records in the collection have been deleted');
-          };
+          //     // Clear all records from the object store
+          //     await db.clear('videoChunks');
+          //     console.log('All records in the collection have been deleted');
+          // };
           const deleteByAttribute = async (attributeName, attributeValue) => {
             const db = await initDBChunk();
         
@@ -151,6 +152,8 @@ const  VideoTutor = () => {
         
             // Wait for the transaction to complete
             await tx.done;
+            setFullyDownloadedFirst(true);
+
             console.log(`Records with ${attributeName} = ${attributeValue} deleted`);
         };
             if(id){
@@ -284,7 +287,7 @@ const  VideoTutor = () => {
       <img
       onClick={handleDownloadFirst}
         src="/download.png"
-        className={` ${handleDownloadFirstVideo ? "hidden":""} h-full w-auto hover:scale-110 transition-transform duration-300`}
+        className={` ${handleDownloadFirstVideo ? "hidden":""} ${fullyDownloadedFirst ? "hidden":""} h-full w-auto hover:scale-110 transition-transform duration-300`}
         alt=""
       />
        <img
@@ -293,7 +296,15 @@ const  VideoTutor = () => {
          setHandleDownloadFirstVideo(false);
       }}
         src="/pause.png"
-        className={` ${pauseFirst ? "":"hidden"} h-full w-auto hover:scale-110 transition-transform duration-300`}
+        className={` ${pauseFirst ? "":"hidden"} ${fullyDownloadedFirst ? "hidden":""} h-full w-auto hover:scale-110 transition-transform duration-300`}
+        alt=""
+      />
+       <img
+      onClick={()=>{
+          console.log("finished clicked");
+      }}
+        src="/right.avif"
+        className={` ${fullyDownloadedFirst ? "":"hidden"} h-full w-auto hover:scale-110 transition-transform duration-300`}
         alt=""
       />
     </div>
