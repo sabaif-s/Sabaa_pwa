@@ -14,6 +14,9 @@ if ('serviceWorker' in navigator) {
       });
   });
 }
+window.addEventListener('online',()=>{
+  window.location.reload();
+})
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App />
