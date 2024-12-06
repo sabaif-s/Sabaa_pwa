@@ -3,8 +3,11 @@ import { openDB } from 'idb';
 import firstVideo from '../assets/videos/firstVideo.mp4';
 import secondVideo from '../assets/videos/secondVideo.mp4';
 import DownloadedVideo from './Downloaded';
+import AssetVideos from './AssetVideos';
+import { use } from 'react';
 const  VideoTutor = () => {
     const [activeButton,setActiveButton]=useState(0);
+    const {videoAsset}=AssetVideos();
     const [backColorGrade,setBackColorGrade]=useState("bg-gradient-to-r from-green-500 to-green-300");
     const [backColorYVideos,setBackColorYVideos]=useState("bg-gradient-to-r from-blue-500 to-blue-300");
     const [clickedList,setClickedList]=useState(0);
@@ -16,6 +19,7 @@ const  VideoTutor = () => {
     const [downloadInProgressFirst,setDownloadInProgressFirst]=useState(false);
     const [startDownloadFirstVideo,setStartDownloadFirstVideo]=useState(false);
     const [fullyDownloadedFirst,setFullyDownloadedFirst]=useState(false);
+    const [renderThisComponent,setRenderThisComponent]=useState(false);
     // useEffect(() => {
     //   let interval;
     //   if (downloadPercentage < 100) {
@@ -31,7 +35,15 @@ const  VideoTutor = () => {
     // }, [downloadPercentage]);
     
      
-    
+    useEffect(()=>{
+      if(videoAsset.length > 0){
+        console.log("asset videos:",videoAsset);
+        setRenderThisComponent(true);
+      }
+      else {
+        console.log("video Asset 0 no video");
+      }
+    },[videoAsset]);
     useEffect(() => {
       async function downloadVideo(videoUrl) {
         // Open or create an IndexedDB instance
