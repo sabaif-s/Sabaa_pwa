@@ -26,7 +26,7 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'sw.js',
       registerType: 'autoUpdate', // Register the service worker with auto update
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'], // Include assets like icons
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg','vite.svg'], // Include assets like icons
       manifest: {
         name: 'Vite PWA Project',
         short_name: 'Vite PWA Project',
