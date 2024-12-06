@@ -2,6 +2,7 @@ import React,{useEffect,useState} from 'react';
 import { openDB } from 'idb';
 import firstVideo from '../assets/videos/firstVideo.mp4';
 import secondVideo from '../assets/videos/secondVideo.mp4';
+import DownloadedVideo from './Downloaded';
 const  VideoTutor = () => {
     const [activeButton,setActiveButton]=useState(0);
     const [backColorGrade,setBackColorGrade]=useState("bg-gradient-to-r from-green-500 to-green-300");
@@ -404,6 +405,11 @@ const  VideoTutor = () => {
        )
    }
                           </div>
+                        )
+                       }
+                       {
+                        activeButton == 1 && (
+                          <DownloadedVideo/>
                         )
                        }
          
