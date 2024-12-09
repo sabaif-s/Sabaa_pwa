@@ -454,19 +454,7 @@ const  VideoTutor = () => {
     const viewVideosClicked=()=>{
        setActiveButton(1);
     }
-    const isPaused= async (videoName)=>{
-      console.log(pausedVideos.includes(videoName));
-      console.log(videoName);
-      console.log(typeof(videoName));
-     
-      if(pausedVideos.includes(videoName)){
-        
-        return true;
-      }
-      else{
-            return false;
-      }
-    }
+ 
   
     return (
         <>
