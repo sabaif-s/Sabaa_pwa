@@ -10,7 +10,7 @@ const  VideoTutor = () => {
     const {videoAsset}=AssetVideos();
     const [backColorGrade,setBackColorGrade]=useState("bg-gradient-to-r from-green-500 to-green-300");
     const [backColorYVideos,setBackColorYVideos]=useState("bg-gradient-to-r from-blue-500 to-blue-300");
-    const [clickedList,setClickedList]=useState(0);
+    const [clickedList,setClickedList]=useState(9999);
     const [fetchedErrorVideoShow,setFetchedErrorVideoShow]=useState(false);
     const [fetchedErrorVideoShow2,setFetchedErrorVideoShow2]=useState(false);
     const [downloadPercentage, setDownloadPercentage] = useState(0);
@@ -22,20 +22,17 @@ const  VideoTutor = () => {
     const [renderThisComponent,setRenderThisComponent]=useState(false);
     const [downLoadLink,setDownLoadLink]=useState(false);
     const [downloadingVideo,setDownLoadingVideo]=useState("");
-    // useEffect(() => {
-    //   let interval;
-    //   if (downloadPercentage < 100) {
-    //     interval = setInterval(() => {
-    //       setDownloadPercentage((prev) => {
-    //         if (prev < 100) return prev + 1;
-    //         clearInterval(interval);
-    //         return 100;
-    //       });
-    //     }, 100); // Simulate download progress every 100ms
-    //   }
-    //   return () => clearInterval(interval);
-    // }, [downloadPercentage]);
-    
+    const [downloadedList,setDownLoadedList]=useState([]);
+    const [showRight,setShowRight]=useState(false);
+    const [showDownload,setShowDownload]=useState(true);
+    const [hidePause,setHidePause]=useState(true);
+    const [hideDownload,setHideDownload]=useState(false);
+    const [hideRight,setHideRight]=useState(true);
+    const [showPause,setShowPause]=useState(false);
+    const [currentVideo,setCurrentVideo]=useState(9999);
+    const [clickedButton,setClickedButton]=useState("");
+    const [downloadedLinks,setDownloadedLinks]=useState([]);
+    const [showCurrentVideo,setShowCurrentVideo]=useState(9999);
      
     useEffect(()=>{
       if(videoAsset.length > 0){
@@ -126,64 +123,65 @@ const  VideoTutor = () => {
           const videoURL = URL.createObjectURL(finalBlob);
            // time to save full db
            const saveVideoBlob = async (videoBlob) => {
-            const db = await initDB();
+            const dbs = await initDB();
         
             // Save the video blob to the database
-            const id = await db.put('videos', {
+            const id = await dbs.put('videos', {
                 blob: videoBlob, // Store the Blob
                 createdAt: new Date(), // Optional metadata
             });
             console.log(`Video saved with ID: ${id}`);
-          //   const clearAllRecords = async () => {
-          //     const db = await initDBChunk();
-          
-          //     // Clear all records from the object store
-          //     await db.clear('videoChunks');
-          //     console.log('All records in the collection have been deleted');
-          // };
-          const deleteByAttribute = async (attributeName, attributeValue) => {
-            const db = await initDBChunk();
-        
-            // Open a transaction with readwrite access
-            const tx = db.transaction('videoChunks', 'readwrite');
-            const store = tx.objectStore('videoChunks');
-        
-            // Use a cursor to iterate through all records
-            let cursor = await store.openCursor();
-        
-            while (cursor) {
-                const record = cursor.value;
-        
-                // Check if the record's attribute matches the desired value
-                if (record[attributeName] === attributeValue) {
-                    // Delete the record using the key
-                    await store.delete(cursor.key);
-                    console.log(`Record with key ${cursor.key} deleted`);
-                }
-        
-                // Move to the next record
-                cursor = await cursor.continue();
-            }
-        
-            // Wait for the transaction to complete
-            await tx.done;
-            setFullyDownloadedFirst(downloadingUnique);
-
-            console.log(`Records with ${attributeName} = ${attributeValue} deleted`);
-        };
-            if(id){
-              // clearAllRecords();
-              deleteByAttribute("identifier","firstVideo");
-            }
+            
+         
+         
+             
             
           
           // Example usage
           
             
         };
+        const deleteByAttribute = async (attributeName, attributeValue) => {
+          const db = await initDBChunk();
+      
+          // Open a transaction with readwrite access
+          const tx = db.transaction('videoChunks', 'readwrite');
+          const store = tx.objectStore('videoChunks');
+      
+          // Use a cursor to iterate through all records
+          let cursor = await store.openCursor();
+      
+          while (cursor) {
+              const record = cursor.value;
+                console.log(record);
+                console.log(record[attributeName]);
+              // Check if the record's attribute matches the desired value
+              if (record[attributeName] === attributeValue) {
+                  // Delete the record using the key
+                  await store.delete(cursor.key);
+                  console.log(`Record with key ${cursor.key} deleted`);
+              }
+      
+              // Move to the next record
+              cursor = await cursor.continue();
+          }
+      
+          // Wait for the transaction to complete
+          await tx.done;
+          setFullyDownloadedFirst(downloadingUnique);
+                 
+          console.log(`Records with ${attributeName} = ${attributeValue} deleted`);
+      };
+        saveVideoBlob(finalBlob).then(()=>{
+          deleteByAttribute("identifier","firstVideo").then(()=>{
+            setDownloadedLinks([...downloadedLinks,downloadingUnique]);
+          })
+        }).catch((err)=>{
+          console.log(err);
+        })
         
         
-        saveVideoBlob(finalBlob);
+      
         
 
 
@@ -196,10 +194,11 @@ const  VideoTutor = () => {
         return fetchChunks();
       }
     
-      if (startDownloadFirstVideo) {
+      if (downLoadLink != "") {
+        console.log("download link changes");
         downloadVideo(downLoadLink,downloadingVideo);
       }
-    }, [startDownloadFirstVideo]);
+    }, [downLoadLink]);
     
    useEffect(()=>{
       if(handleDownloadFirstVideo){
@@ -218,6 +217,20 @@ const  VideoTutor = () => {
         setBackColorYVideos(active);
       }
     },[activeButton]);
+    useEffect(()=>{
+           if(downloadedList.length > 0){
+            setTimeout(()=>{
+              console.log("downloaded list :",downloadedList);
+              console.log(downloadedList.includes('0'));
+              console.log(downloadedList.includes('1'));
+             },10000);
+           }
+          
+    },[downloadedList]);
+    useEffect(()=>{
+      console.log("downloaded links ",downloadedLinks);
+    },[downloadedLinks]);
+    
     const handleError=()=>{
       console.log("error in fetching video");
       setFetchedErrorVideoShow(true);
@@ -226,10 +239,14 @@ const  VideoTutor = () => {
       console.log("error in fetching video");
       setFetchedErrorVideoShow2(true);
     }
-    const handleDownloadFirst= async (event)=>{
+    const handleDownloadFirst=  (event)=>{
       console.log(event.target.getAttribute('id'));
       const index=event.target.getAttribute('id');
+      setDownloadPercentage(0);
+      setCurrentVideo(index);
+      setClickedButton("download");
        setHandleDownloadFirstVideo(index);
+       setDownLoadedList([...downloadedList,index]);
        setPauseFirst(index);
        setDownLoadingVideo(videoAsset[index].uniqueName);
        setDownLoadLink(videoAsset[index].src);
@@ -284,12 +301,14 @@ Your Videos
 
 <div 
 onClick={()=>{
-if(clickedList == index  && !downloadInProgressFirst){
-   setClickedList(0);
+if(clickedList == index){
+   setClickedList(9999);
  
 }
 else{
    setClickedList(index);
+   setShowCurrentVideo(index);
+   
 }
 
 }}
@@ -316,7 +335,7 @@ className="w-1/2 h-full flex justify-center items-center overflow-x-hidden">
  onClick={handleDownloadFirst}
  id={index}
    src="/download.png"
-   className={` ${handleDownloadFirstVideo == index ? "hidden":""} ${fullyDownloadedFirst == asset.uniqueName  ? "hidden":""} h-full w-auto hover:scale-110 transition-transform duration-300`}
+   className={` ${currentVideo == index && clickedButton == "download" ? "hidden":""} ${downloadedLinks.includes(asset.uniqueName) ? "hidden":"" } ${handleDownloadFirstVideo == index ? "hidden":""} ${fullyDownloadedFirst == asset.uniqueName  ? "hidden":""} h-full w-auto hover:scale-110 transition-transform duration-300`}
    alt=""
  />
   <img
@@ -333,7 +352,7 @@ className="w-1/2 h-full flex justify-center items-center overflow-x-hidden">
      console.log("finished clicked");
  }}
    src="/right.avif"
-   className={` ${fullyDownloadedFirst == asset.uniqueName ? "":"hidden"} h-full w-auto hover:scale-110 transition-transform duration-300`}
+   className={` ${downloadedLinks.includes(asset.uniqueName) ? "":"hidden"} h-full w-auto hover:scale-110 transition-transform duration-300`}
    alt=""
  />
 </div>
@@ -344,7 +363,7 @@ clickedList == index && (
   <>
     <div
      
-    className={` ${handleDownloadFirstVideo == index ? "":"hidden"} w-full p-4 bg-white h-44`} >
+    className={` ${handleDownloadFirstVideo == index || showCurrentVideo == index ? "":"hidden"} w-full p-4 bg-white h-44`} >
          <video controls muted autoPlay onError={handleError} src={asset.src} className={` ${fetchedErrorVideoShow ? "hidden":""} w-full h-full`} ></video>
          <div className={` ${fetchedErrorVideoShow ? "":"hidden"} w-full h-full bg-gray-300 text-red-300 flex justify-center items-center`}>
                       <span className='text-blue-300 font-semibold' >YOU NEED TO CONNECT YOUR DEVICE TO INTERNET</span>
