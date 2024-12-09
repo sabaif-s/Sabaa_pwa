@@ -5,9 +5,10 @@ import secondVideo from '../assets/videos/secondVideo.mp4';
 import DownloadedVideo from './Downloaded';
 import AssetVideos from './AssetVideos';
 import { use } from 'react';
+import AllVideosDownLoaded from './AllVideosDownLoaded';
 const  VideoTutor = () => {
     const [activeButton,setActiveButton]=useState(0);
-    const {videoAsset}=AssetVideos();
+    const {videoAsset,filteredAsset,successSend}=AssetVideos();
     const [backColorGrade,setBackColorGrade]=useState("bg-gradient-to-r from-green-500 to-green-300");
     const [backColorYVideos,setBackColorYVideos]=useState("bg-gradient-to-r from-blue-500 to-blue-300");
     const [clickedList,setClickedList]=useState(9999);
@@ -33,172 +34,163 @@ const  VideoTutor = () => {
     const [clickedButton,setClickedButton]=useState("");
     const [downloadedLinks,setDownloadedLinks]=useState([]);
     const [showCurrentVideo,setShowCurrentVideo]=useState(9999);
+    const [showAllVideosDownLoaded,setShowAllVideosDownLoaded]=useState(false);
+    const [pausedVideos,setPausedVideos]=useState([]);
+    const [pausingVideo,setPausingVideo]=useState(99999);
      
+    // useEffect(()=>{
+    //   if(videoAsset.length > 0){
+    //     console.log("asset videos:",videoAsset);
+    //     setRenderThisComponent(true);
+    //   }
+    //   else {
+    //     console.log("video Asset 0 no video");
+    //   }
+    // },[videoAsset]);
     useEffect(()=>{
-      if(videoAsset.length > 0){
-        console.log("asset videos:",videoAsset);
-        setRenderThisComponent(true);
-      }
-      else {
-        console.log("video Asset 0 no video");
-      }
-    },[videoAsset]);
-    useEffect(() => {
-      async function downloadVideo(videoUrl,downloadingUnique) {
-        // Open or create an IndexedDB instance
-        const initDBChunk=async ()=>{
-          const db = await openDB('video-db', 1, {
-            upgrade(db) {
-              // Create an object store for storing video chunks
-              if (!db.objectStoreNames.contains('videoChunks')) {
-                db.createObjectStore('videoChunks', { keyPath: 'chunkStart' });
-              }
-            },
-          });
-          return db;
-        }
-        const db=await initDBChunk();
-      
-        const initDB = async () => {
-          const db = await openDB('VideoDatabaseFull', 1, {
-              upgrade(db) {
-                  if (!db.objectStoreNames.contains('videos')) {
-                      db.createObjectStore('videos', { keyPath: 'id', autoIncrement: true });
-                  }
-              },
-          });
-          return db;
-      };
-        const chunkSize = 1024 * 1024; // 1MB per chunk
-        let downloadedSize = 0;
-        let totalSize = 0;
-    
-        // First, get the total video size using a HEAD request
-        const headResponse = await fetch(videoUrl, { method: 'HEAD' });
-        if (!headResponse.ok) {
-          console.error('Failed to fetch video header');
-          return;
-        }
-        totalSize = parseInt(headResponse.headers.get('Content-Length'), 10);
-    
-        // Prepare for download
-        const videoBlobParts = [];
-    
-        // Function to update progress and store chunks in IndexedDB
-        const updateProgress = async (chunk, chunkStart) => {
-          downloadedSize += chunk.length;
-          const percentage = Math.round((downloadedSize / totalSize) * 100);
-          setDownloadPercentage(percentage);
-          console.log(`Downloading: ${percentage}%`);
-    
-          // Store the chunk in IndexedDB
-          await db.put('videoChunks', { chunkStart, chunk, identifier:"firstVideo" });
-    
-          // Update the Blob parts
-          videoBlobParts.push(chunk);
-        };
-    
-        // Function to fetch chunks
-        const fetchChunks = async () => {
-          let chunkStart = 0;
-          while (chunkStart < totalSize) {
-            const response = await fetch(videoUrl, {
-              headers: {
-                'Range': `bytes=${chunkStart}-${chunkStart + chunkSize - 1}`,
-              }
-            });
-    
-            if (!response.ok) {
-              console.error('Failed to fetch video chunk');
-              break;
-            }
-    
-            const chunk = await response.arrayBuffer();
-            updateProgress(new Uint8Array(chunk), chunkStart);
-            chunkStart += chunkSize;
+       
+         if(successSend){
+          if(filteredAsset.length > 0){
+            console.log("UnDownloaded video:",filteredAsset);
+            setRenderThisComponent(true);
+           }
+           else{
+            console.log("all videos downloaded");
+            setShowAllVideosDownLoaded(true);
+           }
+         }
+    },[filteredAsset,successSend]);
+    useEffect(()=>{
+         if(pausingVideo != 99999){
+          if(filteredAsset.length > 0){
+            console.log("pausing video");
+            const pausedVideo=filteredAsset[pausingVideo].uniqueName;
+            console.log(pausedVideo);
+            setPausedVideos((prev)=> [...prev,pausedVideo]);
           }
+                   
+         }
+    },[pausingVideo]);
+    useEffect(()=>{
+      console.log('paused videos');
+           console.log(pausedVideos);
+    },[pausedVideos]);
+    useEffect(() => {
+      async function initDBChunk() {
+        return await openDB('video-db', 1, {
+          upgrade(db) {
+            if (!db.objectStoreNames.contains('videoChunks')) {
+              db.createObjectStore('videoChunks', { keyPath: 'chunkStart' });
+            }
+          },
+        });
+      }
     
-          // Once all chunks are downloaded, create a Blob
+      async function initDB() {
+        return await openDB('VideoDatabaseFull', 1, {
+          upgrade(db) {
+            if (!db.objectStoreNames.contains('videos')) {
+              db.createObjectStore('videos', { keyPath: 'id', autoIncrement: true });
+            }
+          },
+        });
+      }
+    
+      async function downloadVideo(videoUrl, downloadingUnique) {
+        try {
+          const dbChunks = await initDBChunk();
+          const dbFull = await initDB();
+          const chunkSize = 1024 * 1024; // 1MB per chunk
+          let downloadedSize = 0;
+    
+          // Get total video size
+          const headResponse = await fetch(videoUrl, { method: 'HEAD' });
+          if (!headResponse.ok) {
+            console.error('Failed to fetch video header');
+            return;
+          }
+          const totalSize = parseInt(headResponse.headers.get('Content-Length'), 10);
+    
+          // Prepare for download
+          const videoBlobParts = [];
+    
+          // Fetch and store chunks
+          const fetchChunks = async () => {
+            let chunkStart = 0;
+            while (chunkStart < totalSize) {
+              const response = await fetch(videoUrl, {
+                headers: { Range: `bytes=${chunkStart}-${chunkStart + chunkSize - 1}` },
+              });
+    
+              if (!response.ok) {
+                console.error('Failed to fetch video chunk');
+                return;
+              }
+    
+              const chunk = await response.arrayBuffer();
+              downloadedSize += chunk.byteLength;
+              const percentage = Math.round((downloadedSize / totalSize) * 100);
+              setDownloadPercentage(percentage);
+              console.log(`Downloading: ${percentage}%`);
+    
+              // Store the chunk and update Blob parts
+              await dbChunks.put('videoChunks', { chunkStart, chunk, identifier: 'firstVideo' });
+              videoBlobParts.push(new Uint8Array(chunk));
+              chunkStart += chunkSize;
+            }
+          };
+    
+          await fetchChunks();
+    
+          // Combine chunks into a final Blob
           const finalBlob = new Blob(videoBlobParts, { type: 'video/mp4' });
           const videoURL = URL.createObjectURL(finalBlob);
-           // time to save full db
-           const saveVideoBlob = async (videoBlob) => {
-            const dbs = await initDB();
-        
-            // Save the video blob to the database
-            const id = await dbs.put('videos', {
-                blob: videoBlob, // Store the Blob
-                createdAt: new Date(), // Optional metadata
-            });
-            console.log(`Video saved with ID: ${id}`);
-            
-         
-         
-             
-            
-          
-          // Example usage
-          
-            
-        };
-        const deleteByAttribute = async (attributeName, attributeValue) => {
-          const db = await initDBChunk();
-      
-          // Open a transaction with readwrite access
-          const tx = db.transaction('videoChunks', 'readwrite');
-          const store = tx.objectStore('videoChunks');
-      
-          // Use a cursor to iterate through all records
-          let cursor = await store.openCursor();
-      
-          while (cursor) {
+    
+          // Save Blob to the database
+          const videoId = await dbFull.put('videos', {
+            blob: finalBlob,
+            id:new Date(),
+            createdAt: new Date()
+          });
+          console.log(`Video saved with ID: ${videoId}`);
+    
+          // Delete temporary chunks
+          const deleteByAttribute = async (attributeName, attributeValue) => {
+            const tx = dbChunks.transaction('videoChunks', 'readwrite');
+            const store = tx.objectStore('videoChunks');
+            let cursor = await store.openCursor();
+    
+            while (cursor) {
               const record = cursor.value;
-                console.log(record);
-                console.log(record[attributeName]);
-              // Check if the record's attribute matches the desired value
               if (record[attributeName] === attributeValue) {
-                  // Delete the record using the key
-                  await store.delete(cursor.key);
-                  console.log(`Record with key ${cursor.key} deleted`);
+                await store.delete(cursor.key);
               }
-      
-              // Move to the next record
               cursor = await cursor.continue();
-          }
-      
-          // Wait for the transaction to complete
-          await tx.done;
+            }
+    
+            await tx.done;
+            console.log(`Records with ${attributeName} = ${attributeValue} deleted`);
+          };
+    
+          await deleteByAttribute('identifier', 'firstVideo');
+    
+          // Update download links
+          setDownloadedLinks((prevLinks) => [...prevLinks, downloadingUnique]);
           setFullyDownloadedFirst(downloadingUnique);
-                 
-          console.log(`Records with ${attributeName} = ${attributeValue} deleted`);
-      };
-        saveVideoBlob(finalBlob).then(()=>{
-          deleteByAttribute("identifier","firstVideo").then(()=>{
-            setDownloadedLinks([...downloadedLinks,downloadingUnique]);
-          })
-        }).catch((err)=>{
-          console.log(err);
-        })
-        
-        
-      
-        
-
-
-
+          localStorage.setItem(downloadingUnique,downloadingUnique);
+    
           console.log('Download complete. Video URL:', videoURL);
-    
-          return videoURL;
-        };
-    
-        return fetchChunks();
+        } catch (error) {
+          console.error('Error during video download:', error);
+        }
       }
     
-      if (downLoadLink != "") {
-        console.log("download link changes");
-        downloadVideo(downLoadLink,downloadingVideo);
+      if (downLoadLink) {
+        console.log('Download link changed');
+        downloadVideo(downLoadLink, downloadingVideo);
       }
     }, [downLoadLink]);
+    
     
    useEffect(()=>{
       if(handleDownloadFirstVideo){
@@ -253,10 +245,13 @@ const  VideoTutor = () => {
        setStartDownloadFirstVideo(true);
        setClickedList(index);
     }
+    const viewVideosClicked=()=>{
+       setActiveButton(1);
+    }
     return (
         <>
             {
-              renderThisComponent && (
+              true && (
                 <div className='w-full min-h-screen flex flex-col justify-start items-center bg-gradient-to-t from-gray-300 to-gray-400 pt-4' >
                 <div className='w-full p-4 flex justify-center items-center bg-white text-gray-400 mb-6' >
                  <h1 className='text-3xl font-semibold' >
@@ -281,6 +276,7 @@ Grade
                  <div
                  onClick={()=>{
                      setActiveButton(1);
+                      
                  }}
                  className={` ${backColorYVideos} w-1/2 flex relative z-20 justify-center items-center h-full  p-4 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300 group`}>
 <div className="text-white h-full text-2xl font-semibold group-hover:scale-105 transition-transform duration-300 ease-in-out">
@@ -289,10 +285,10 @@ Your Videos
 </div>
                 </div>
                 {
-                 activeButton == 0 && (
+                 activeButton == 0 && !showAllVideosDownLoaded && (
                    <div className='mt-4 w-full h-auto py-4 bg-white flex flex-col gap-y-4 justify-start items-center' >
                      {
-                        videoAsset.map((asset,index)=>(
+                        filteredAsset.map((asset,index)=>(
                           <React.Fragment key={asset.uniqueName}>
                                    <div
                                     
@@ -341,6 +337,7 @@ className="w-1/2 h-full flex justify-center items-center overflow-x-hidden">
   <img
  onClick={()=>{
     setPauseFirst(index);
+    setPausingVideo(index);
     setHandleDownloadFirstVideo(index);
  }}
    src="/pause.png"
@@ -416,8 +413,14 @@ clickedList == index && (
                  )
                 }
                 {
+                  activeButton == 0 && showAllVideosDownLoaded && (
+                    <AllVideosDownLoaded onViewVideos={viewVideosClicked} />
+                  )
+                }
+                {
                  activeButton == 1 && (
-                   <DownloadedVideo/>
+                   <DownloadedVideo reload={true}
+                    />
                  )
                 }
   

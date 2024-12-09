@@ -1,7 +1,7 @@
 import React,{useEffect,useState} from 'react';
 import {openDB} from "idb";
 import { use } from 'react';
-const  DownloadedVideo = () => {
+const  DownloadedVideo = ({reload}) => {
     const [videoUrls,setVideoUrls]=useState("");
     const [renderComponent,setRenderComponent]=useState(false);
     const [downloadedVideos,setDownloadedVideos]=useState([]);
@@ -57,8 +57,11 @@ const  DownloadedVideo = () => {
           };
           
           // Example usage
-          fetchData();
-    },[]);
+          if(reload){
+            fetchData();
+          }
+          
+    },[reload]);
   useEffect(()=>{
         if(downloadedVideos.length > 0){
           setRenderComponent(true);
@@ -117,8 +120,8 @@ const  DownloadedVideo = () => {
                  </div>
                  </div>
                  </div>
-                 <div className={`w-full p-4 bg-white h-44`} >
-        <video controls muted autoPlay onError={handleError2} src={video} className={` ${currentShowVideo != index ? "hidden":""} w-full h-full`} ></video>
+                 <div className={`w-full ${currentShowVideo != index ? "hidden":""}  p-4 bg-white h-44`} >
+        <video controls muted autoPlay onError={handleError2} src={video} className={` w-full h-full`} ></video>
          
         </div>
                  </React.Fragment>
