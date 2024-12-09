@@ -37,6 +37,7 @@ const  VideoTutor = () => {
     const [showAllVideosDownLoaded,setShowAllVideosDownLoaded]=useState(false);
     const [pausedVideos,setPausedVideos]=useState([]);
     const [pausingVideo,setPausingVideo]=useState(99999);
+    const [resumeDownLoad,setResumeDownLoad]=useState(0);
     const [pausedCurrent,setPausedCurrent]=useState("");
     const [downloadingVideoData,setDownLoadingVideoData]=[{}];
    
@@ -253,9 +254,31 @@ const  VideoTutor = () => {
             },
           });
         }
+        let chunkStart = 0; // Default value
+        let downloadedSize = 0; // Default value
+        let finished=false;
+        // Retrieve data from localStorage
+        const data = JSON.parse(localStorage.getItem('startDownloading'));
+         console.log("data:",data);
+        if (data == null) {
+          console.log("data is Null");
+          chunkStart = 0;
+          downloadedSize = 0;
+        } else  {
+          // Find the matching item based on uniqueName
+          const matchingItem = data.find(item => item.uniqueName == uniqueName);
+          
+          if (matchingItem) {
+            console.log(matchingItem);
+            chunkStart = matchingItem.chunkStart;
+            downloadedSize =matchingItem.downloadedSize ;
+          } else {
+            console.log("No matching item found in the stored data.");
+            
+          }
+        }
             let chunkSize=1024 * 1024;
-            let chunkStart=0;
-            let downloadedSize=0;
+             
             const dbChunks = await initDBChunk();
              
             const videoBlobParts = [];
@@ -284,38 +307,88 @@ const  VideoTutor = () => {
               await dbChunks.put('videoChunks', { chunkStart, chunk, identifier: uniqueName });
               videoBlobParts.push(new Uint8Array(chunk));
               chunkStart += chunkSize;
-              return {videoBlobParts,downloadedSize,chunkStart,uniqueName,downloadUrl}
+              return {videoBlobParts,downloadedSize,chunkStart,uniqueName,downloadUrl,finished}
             }
             else{
               console.log("finished");
+              finished=true;
+              return {finished:finished};
+              
             }
 
       }
        if(downLoadLink){
          startDownLoading(downLoadLink,downloadingVideo).then((data)=>{
+             if(!data.finished){
+             
              const savedData={
                chunkStart:data.chunkStart,
                uniqueName:data.uniqueName,
-               downloadUrl:data.downloadUrl
+               downloadUrl:data.downloadUrl,
+               downloadedSize:data.downloadedSize
              }
-             const prevStartDownloading=JSON.parse(localStorage.getItem("startDownloading"));
+             let prevStartDownloading=JSON.parse(localStorage.getItem("startDownloading"));
+             let match=[];
+             if(prevStartDownloading != null){
+              const matchItem=prevStartDownloading.find((item)=> item.uniqueName == data.uniqueName);
+              match=matchItem;
+             }
+            
              console.log(prevStartDownloading);
-
-            const newData=[savedData,prevStartDownloading]
-            console.log(newData);
-          localStorage.setItem("startDownloading",JSON.stringify(newData));
+            let dataSend=[];
+                 if(prevStartDownloading){
+                  if(match){
+                    let newData=[];
+                    const newPrev=prevStartDownloading.map((item)=>{
+                      if(item.uniqueName == data.uniqueName){
+                       return savedData
+                      }
+                      else {
+                        return item
+                      }
+                      
+                  })
+                  newData=newPrev;
+                  dataSend=newData;
+                 }
+                 else {
+                  dataSend=[...prevStartDownloading,savedData]
+                 }
+                  }
+                
+                 else{
+                  let newData=[];
+                  newData.push(savedData);
+                  dataSend=newData;
+                 }
+              
+            console.log(dataSend);
+          localStorage.setItem("startDownloading",JSON.stringify(dataSend));
         const paused=checkPause(data.uniqueName);
          console.log("paused :",paused);
+         if(paused){
+          console.log("paused");
+         }
+         else{
+          console.log("resume downloading");
+          
+          setResumeDownLoad((prev)=> prev + 1);
+         }
           console.log(JSON.stringify(savedData));
+          
+        }
+        else {
+          console.log("finished");
+        }
          }).catch((err)=>{
           console.log(err);
          })
         
        }
-    },[downLoadLink]);
+    },[downLoadLink,resumeDownLoad]);
     
     const checkPause=(uniqueName)=>{
-         if(localStorage.getItem("pausedVideo").includes(uniqueName)){
+         if(localStorage.getItem("pausedVideo") && localStorage.getItem('pausedVideo').includes(uniqueName)){
           console.log(localStorage.getItem("pausedVideo"));
           return true;
          }
