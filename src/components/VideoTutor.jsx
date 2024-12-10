@@ -287,7 +287,7 @@ const  VideoTutor = () => {
              
             const getHeadResponseList = async () => {
               const headResponseList = await Promise.all(
-                currentUrlDownloadingLists.map(async (item) => {
+                currentUrlDownloadingLists.map(async (item,index) => {
                   const response = await fetch(item, { method: 'HEAD' });
                   const totalSizes = parseInt(response.headers.get('Content-Length'), 10);
             
@@ -295,7 +295,7 @@ const  VideoTutor = () => {
                   const startPoint = JSON.parse(localStorage.getItem('startDownloading'));
                   let chunkStart = 0;
                    let uniqueVideoName="";
-                   let downloadUrls=downloadUrl;
+                   let downloadUrls=currentUrlDownloadingLists[index];
                    let downloadedSize=0;
             
                   if (startPoint != null) {
@@ -310,7 +310,7 @@ const  VideoTutor = () => {
                   }
                    
             
-                  return { totalSizes, chunkStart,uniqueName,downloadUrls,downloadedSize };
+                  return { totalSizes, chunkStart,uniqueVideoName,downloadUrls,downloadedSize };
                 })
               );
             
@@ -336,6 +336,8 @@ const  VideoTutor = () => {
                    let names=item.uniqueName;
                    let downloadedSize=item.downloadedSize;
                    let totalSize=item.totalSizes;
+                   let uniqueNameSaved=item.uniqueVideoName;
+                   let downloadedUrls=item.downloadUrls;
                     downloadedSize += chunk.byteLength;
                     const percentage = Math.round((downloadedSize / totalSize) * 100);
                     setDownloadPercentage(percentage);
@@ -346,7 +348,7 @@ const  VideoTutor = () => {
                     await dbChunks.put('videoChunks', { chunkStart, chunk, identifier: names,date:new Date() });
                     videoBlobParts.push(new Uint8Array(chunk));
                     chunkStart += chunkSize;
-                    return {videoBlobParts,downloadedSize,chunkStart,uniqueName,downloadUrl,finished}
+                    return {videoBlobParts,downloadedSize,chunkStart,uniqueNameSaved,downloadedUrls,finished}
                   }
                  })
                )
