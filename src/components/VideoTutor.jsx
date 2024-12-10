@@ -40,6 +40,7 @@ const  VideoTutor = () => {
     const [resumeDownLoad,setResumeDownLoad]=useState(0);
     const [pausedCurrent,setPausedCurrent]=useState("");
     const [downloadingVideoData,setDownLoadingVideoData]=[{}];
+    const [currentDownloadingVideoLists,setCurrentDownloadingVideoLists]=useState([]);
    
      
     // useEffect(()=>{
@@ -244,12 +245,12 @@ const  VideoTutor = () => {
     // }, [downLoadLink]);
 
     useEffect(()=>{
-      const startDownLoading= async (downloadUrl,uniqueName)=>{
+      const startDownLoading= async (downloadUrl,uniqueName,currentVideoIndex)=>{
         async function initDBChunk() {
           return await openDB('video-db', 1, {
             upgrade(db) {
               if (!db.objectStoreNames.contains('videoChunks')) {
-                db.createObjectStore('videoChunks', { keyPath: 'chunkStart' });
+                db.createObjectStore('videoChunks', { keyPath: 'id',autoIncrement:true });
               }
             },
           });
@@ -294,6 +295,7 @@ const  VideoTutor = () => {
               });
               if (!response.ok) {
                 console.error('Failed to fetch video chunk');
+               
                 return;
               }
               
@@ -304,7 +306,7 @@ const  VideoTutor = () => {
               console.log(`Downloading: ${percentage}%`);
     
               // Store the chunk and update Blob parts
-              await dbChunks.put('videoChunks', { chunkStart, chunk, identifier: uniqueName });
+              await dbChunks.put('videoChunks', { chunkStart, chunk, identifier: uniqueName,date:new Date() });
               videoBlobParts.push(new Uint8Array(chunk));
               chunkStart += chunkSize;
               return {videoBlobParts,downloadedSize,chunkStart,uniqueName,downloadUrl,finished}
@@ -312,13 +314,16 @@ const  VideoTutor = () => {
             else{
               console.log("finished");
               finished=true;
+              const downloadingFilter=currentDownloadingVideoLists.filter((item)=> item != currentVideoIndex);
+              console.log("filtered downloading:",downloadingFilter);
+              setCurrentDownloadingVideoLists(downloadingFilter);
               return {finished:finished};
               
             }
 
       }
        if(downLoadLink){
-         startDownLoading(downLoadLink,downloadingVideo).then((data)=>{
+         startDownLoading(downLoadLink,downloadingVideo,currentVideo).then((data)=>{
              if(!data.finished){
              
              const savedData={
@@ -427,6 +432,12 @@ const  VideoTutor = () => {
     useEffect(()=>{
       console.log("downloaded links ",downloadedLinks);
     },[downloadedLinks]);
+
+    useEffect(()=>{
+       if(currentDownloadingVideoLists){
+        console.log( "currentDownloadingVideoLists: ",currentDownloadingVideoLists);
+       }
+    },[currentDownloadingVideoLists]);
     
    
     const handleError=()=>{
@@ -440,8 +451,11 @@ const  VideoTutor = () => {
     const handleDownloadFirst=  (event)=>{
       console.log(event.target.getAttribute('id'));
       const index=event.target.getAttribute('id');
-      setDownloadPercentage(0);
+      // setResumeDownLoad((prev)=> prev + 1);
+
+      // setDownloadPercentage(0);
       setCurrentVideo(index);
+      setCurrentDownloadingVideoLists((prev)=> [...prev,index]);
       setClickedButton("download");
        setHandleDownloadFirstVideo(index);
        setDownLoadedList([...downloadedList,index]);
@@ -544,12 +558,19 @@ className="w-1/2 h-full flex justify-center items-center overflow-x-hidden">
  />
   <img
  onClick={()=>{
+  if(pausingVideo == index){
+   setClickedButton('pause');
+   setHandleDownloadFirstVideo(9999);
+  }
+  else{
     setPauseFirst(index);
     setPausingVideo(index);
     setHandleDownloadFirstVideo(index);
+  }
+  
  }}
    src="/pause.png"
-   className={` ${pauseFirst == index ? "":"hidden"} ${fullyDownloadedFirst == asset.uniqueName ? "hidden":""} h-full w-auto hover:scale-110 transition-transform duration-300`}
+   className={` ${pauseFirst == index ? "":"hidden"} ${clickedButton == "pause" ? "hidden":""} ${fullyDownloadedFirst == asset.uniqueName ? "hidden":""} h-full w-auto hover:scale-110 transition-transform duration-300`}
    alt=""
  />
   <img
