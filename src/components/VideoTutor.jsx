@@ -261,35 +261,111 @@ const  VideoTutor = () => {
         let downloadedSize = 0; // Default value
         let finished=false;
         // Retrieve data from localStorage
-        const data = JSON.parse(localStorage.getItem('startDownloading'));
+        // const data = JSON.parse(localStorage.getItem('startDownloading'));
         
-         console.log("data:",data);
-        if (data == null) {
-          console.log("data is Null");
-          chunkStart = 0;
-          downloadedSize = 0;
-        } else  {
-          // Find the matching item based on uniqueName
-          const matchingItem = data.find(item => item.uniqueName == uniqueName);
+        //  console.log("data:",data);
+        // if (data == null) {
+        //   console.log("data is Null");
+        //   chunkStart = 0;
+        //   downloadedSize = 0;
+        // } else  {
+        //   // Find the matching item based on uniqueName
+        //   const matchingItem = data.find(item => item.uniqueName == uniqueName);
           
-          if (matchingItem) {
-            console.log(matchingItem);
-            chunkStart = matchingItem.chunkStart;
-            downloadedSize =matchingItem.downloadedSize ;
-          } else {
-            console.log("No matching item found in the stored data.");
+        //   if (matchingItem) {
+        //     console.log(matchingItem);
+        //     chunkStart = matchingItem.chunkStart;
+        //     downloadedSize =matchingItem.downloadedSize ;
+        //   } else {
+        //     console.log("No matching item found in the stored data.");
             
-          }
-        }
+        //   }
+        // }
             let chunkSize=1024 * 1024;
              
             const dbChunks = await initDBChunk();
              
-            const headResponseList=currentUrlDownloadingLists.map( async (item)=>{
-                  const response=await fetch(item, {method:'HEAD'});
-                  const totalSizes=parseInt(response.headers.get('Content-Length'), 10);
-                  
+            const getHeadResponseList = async () => {
+              const headResponseList = await Promise.all(
+                currentUrlDownloadingLists.map(async (item) => {
+                  const response = await fetch(item, { method: 'HEAD' });
+                  const totalSizes = parseInt(response.headers.get('Content-Length'), 10);
+            
+                  // Get the start point from localStorage
+                  const startPoint = JSON.parse(localStorage.getItem('startDownloading'));
+                  let chunkStart = 0;
+                   let uniqueVideoName="";
+                   let downloadUrls=downloadUrl;
+                   let downloadedSize=0;
+            
+                  if (startPoint != null) {
+                    const startPointItem = startPoint.find(items => items.downloadUrl === item);
+                    if (startPointItem) {
+                      chunkStart = startPointItem.chunkStart;
+                      uniqueVideoName=startPointItem.uniqueName;
+                      downloadUrls=startPointItem.downloadUrl;
+                      downloadedSize=startPointItem.downloadedSize;
+                       
+                    }
+                  }
+                   
+            
+                  return { totalSizes, chunkStart,uniqueName,downloadUrls,downloadedSize };
+                })
+              );
+            
+              console.log("head response list", headResponseList);
+              return headResponseList; // Return if needed elsewhere
+            };
+            
+            const saveChunkVideos=async (data)=>{
+               const savedData=await Promise.all(
+                 data.map(async (item)=>{
+                  if( item.chunkStart < item.totalSizes){
+                    const response = await fetch(item.downloadUrls, {
+                      headers: { Range: `bytes=${item.chunkStart}-${item.chunkStart + chunkSize - 1}` },
+                    });
+                    if (!response.ok) {
+                      console.error('Failed to fetch video chunk');
+                     
+                      return;
+                    }
+                    
+                    const chunk = await response.arrayBuffer();
+                    chunkStart=item.chunkStart;
+                   let names=item.uniqueName;
+                   let downloadedSize=item.downloadedSize;
+                   let totalSize=item.totalSizes;
+                    downloadedSize += chunk.byteLength;
+                    const percentage = Math.round((downloadedSize / totalSize) * 100);
+                    setDownloadPercentage(percentage);
+                    // console.log(`Downloading: ${percentage}%`);
+          
+                    // Store the chunk and update Blob parts
+                    const videoBlobParts = [];
+                    await dbChunks.put('videoChunks', { chunkStart, chunk, identifier: names,date:new Date() });
+                    videoBlobParts.push(new Uint8Array(chunk));
+                    chunkStart += chunkSize;
+                    return {videoBlobParts,downloadedSize,chunkStart,uniqueName,downloadUrl,finished}
+                  }
+                 })
+               )
+
+               return savedData;
+
+            }
+            // Call the function to execute it
+            getHeadResponseList().then((data)=>{
+               saveChunkVideos(data).then((savedData)=>{
+                console.log("saved data:",savedData);
+               }).catch((err)=>{
+                console.log("error in saving:",err);
+               })
+                 
+            }).catch((err)=>{
+              console.log(err);
             })
+            
             
             // await fetch(downloadUrl, { method: 'HEAD' });
             // const videoBlobParts = [];
