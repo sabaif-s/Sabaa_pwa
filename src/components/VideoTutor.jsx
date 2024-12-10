@@ -303,7 +303,7 @@ const  VideoTutor = () => {
               downloadedSize += chunk.byteLength;
               const percentage = Math.round((downloadedSize / totalSize) * 100);
               setDownloadPercentage(percentage);
-              console.log(`Downloading: ${percentage}%`);
+              // console.log(`Downloading: ${percentage}%`);
     
               // Store the chunk and update Blob parts
               await dbChunks.put('videoChunks', { chunkStart, chunk, identifier: uniqueName,date:new Date() });
@@ -585,17 +585,17 @@ className="w-1/2 h-full flex justify-center items-center overflow-x-hidden">
 </div>
 </div> 
 {
-clickedList == index && (
+(clickedList == index || currentDownloadingVideoLists.includes(index)) && (
   <>
     <div
      
-    className={` ${handleDownloadFirstVideo == index || showCurrentVideo == index ? "":"hidden"} w-full p-4 bg-white h-44`} >
+    className={` ${handleDownloadFirstVideo == index || showCurrentVideo == index || currentDownloadingVideoLists.includes(index) ? "":"hidden"} w-full p-4 bg-white h-44`} >
          <video controls muted autoPlay onError={handleError} src={asset.src} className={` ${fetchedErrorVideoShow ? "hidden":""} w-full h-full`} ></video>
          <div className={` ${fetchedErrorVideoShow ? "":"hidden"} w-full h-full bg-gray-300 text-red-300 flex justify-center items-center`}>
                       <span className='text-blue-300 font-semibold' >YOU NEED TO CONNECT YOUR DEVICE TO INTERNET</span>
          </div>
     </div>
-     <div className={` ${handleDownloadFirstVideo == index ? "":"hidden"} flex flex-col items-center justify-center space-y-4 p-6`}>
+     <div className={` ${handleDownloadFirstVideo == index || currentDownloadingVideoLists.includes(index) ? "":"hidden"} flex flex-col items-center justify-center space-y-4 p-6`}>
   <h2 className="text-xl font-semibold">Downloading in Progress</h2>
 
   {/* Progress bar */}
