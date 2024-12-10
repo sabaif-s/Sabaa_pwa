@@ -41,6 +41,8 @@ const  VideoTutor = () => {
     const [pausedCurrent,setPausedCurrent]=useState("");
     const [downloadingVideoData,setDownLoadingVideoData]=[{}];
     const [currentDownloadingVideoLists,setCurrentDownloadingVideoLists]=useState([]);
+    const [downloadPercentageList,setDownloadPercentageList]=useState([]);
+    const [currentUrlDownloadingLists,setCurrentUrlDownloadingLists]=useState([]);
    
      
     // useEffect(()=>{
@@ -260,6 +262,7 @@ const  VideoTutor = () => {
         let finished=false;
         // Retrieve data from localStorage
         const data = JSON.parse(localStorage.getItem('startDownloading'));
+        
          console.log("data:",data);
         if (data == null) {
           console.log("data is Null");
@@ -282,44 +285,51 @@ const  VideoTutor = () => {
              
             const dbChunks = await initDBChunk();
              
-            const videoBlobParts = [];
-            const headResponse = await fetch(downloadUrl, { method: 'HEAD' });
-            if (!headResponse.ok) {
-              console.error('Failed to fetch video header');
-              return;
-            }
-            const totalSize = parseInt(headResponse.headers.get('Content-Length'), 10);
-            if( chunkStart < totalSize){
-              const response = await fetch(downloadUrl, {
-                headers: { Range: `bytes=${chunkStart}-${chunkStart + chunkSize - 1}` },
-              });
-              if (!response.ok) {
-                console.error('Failed to fetch video chunk');
+            const headResponseList=currentUrlDownloadingLists.map( async (item)=>{
+                  const response=await fetch(item, {method:'HEAD'});
+                  const totalSizes=parseInt(response.headers.get('Content-Length'), 10);
+                  
+            })
+            
+            // await fetch(downloadUrl, { method: 'HEAD' });
+            // const videoBlobParts = [];
+            // const headResponse = await fetch(downloadUrl, { method: 'HEAD' });
+            // if (!headResponse.ok) {
+            //   console.error('Failed to fetch video header');
+            //   return;
+            // }
+            // const totalSize = parseInt(headResponse.headers.get('Content-Length'), 10);
+            // if( chunkStart < totalSize){
+            //   const response = await fetch(downloadUrl, {
+            //     headers: { Range: `bytes=${chunkStart}-${chunkStart + chunkSize - 1}` },
+            //   });
+            //   if (!response.ok) {
+            //     console.error('Failed to fetch video chunk');
                
-                return;
-              }
+            //     return;
+            //   }
               
-              const chunk = await response.arrayBuffer();
-              downloadedSize += chunk.byteLength;
-              const percentage = Math.round((downloadedSize / totalSize) * 100);
-              setDownloadPercentage(percentage);
-              // console.log(`Downloading: ${percentage}%`);
+            //   const chunk = await response.arrayBuffer();
+            //   downloadedSize += chunk.byteLength;
+            //   const percentage = Math.round((downloadedSize / totalSize) * 100);
+            //   setDownloadPercentage(percentage);
+            //   // console.log(`Downloading: ${percentage}%`);
     
-              // Store the chunk and update Blob parts
-              await dbChunks.put('videoChunks', { chunkStart, chunk, identifier: uniqueName,date:new Date() });
-              videoBlobParts.push(new Uint8Array(chunk));
-              chunkStart += chunkSize;
-              return {videoBlobParts,downloadedSize,chunkStart,uniqueName,downloadUrl,finished}
-            }
-            else{
-              console.log("finished");
-              finished=true;
-              const downloadingFilter=currentDownloadingVideoLists.filter((item)=> item != currentVideoIndex);
-              console.log("filtered downloading:",downloadingFilter);
-              setCurrentDownloadingVideoLists(downloadingFilter);
-              return {finished:finished};
+            //   // Store the chunk and update Blob parts
+            //   await dbChunks.put('videoChunks', { chunkStart, chunk, identifier: uniqueName,date:new Date() });
+            //   videoBlobParts.push(new Uint8Array(chunk));
+            //   chunkStart += chunkSize;
+            //   return {videoBlobParts,downloadedSize,chunkStart,uniqueName,downloadUrl,finished}
+            // }
+            // else{
+            //   console.log("finished");
+            //   finished=true;
+            //   const downloadingFilter=currentDownloadingVideoLists.filter((item)=> item != currentVideoIndex);
+            //   console.log("filtered downloading:",downloadingFilter);
+            //   setCurrentDownloadingVideoLists(downloadingFilter);
+            //   return {finished:finished};
               
-            }
+            // }
 
       }
        if(downLoadLink){
@@ -438,6 +448,11 @@ const  VideoTutor = () => {
         console.log( "currentDownloadingVideoLists: ",currentDownloadingVideoLists);
        }
     },[currentDownloadingVideoLists]);
+
+    useEffect(()=>{
+           console.log("current Url Downloading Lists:",currentUrlDownloadingLists);
+           
+    },[currentUrlDownloadingLists]);
     
    
     const handleError=()=>{
@@ -454,6 +469,9 @@ const  VideoTutor = () => {
       // setResumeDownLoad((prev)=> prev + 1);
 
       // setDownloadPercentage(0);
+      const urlClicked=filteredAsset[index].src;
+      console.log("url clicked:",urlClicked);
+      setCurrentUrlDownloadingLists((prev)=> [...prev,urlClicked]);
       setCurrentVideo(index);
       setCurrentDownloadingVideoLists((prev)=> [...prev,index]);
       setClickedButton("download");
@@ -585,17 +603,17 @@ className="w-1/2 h-full flex justify-center items-center overflow-x-hidden">
 </div>
 </div> 
 {
-(clickedList == index || currentDownloadingVideoLists.includes(index)) && (
+(clickedList == index || currentDownloadingVideoLists.includes(String(index))) && (
   <>
     <div
      
-    className={` ${handleDownloadFirstVideo == index || showCurrentVideo == index || currentDownloadingVideoLists.includes(index) ? "":"hidden"} w-full p-4 bg-white h-44`} >
+    className={` ${handleDownloadFirstVideo == index || showCurrentVideo == index || currentDownloadingVideoLists.includes(String(index)) ? "":"hidden"} w-full p-4 bg-white h-44`} >
          <video controls muted autoPlay onError={handleError} src={asset.src} className={` ${fetchedErrorVideoShow ? "hidden":""} w-full h-full`} ></video>
          <div className={` ${fetchedErrorVideoShow ? "":"hidden"} w-full h-full bg-gray-300 text-red-300 flex justify-center items-center`}>
                       <span className='text-blue-300 font-semibold' >YOU NEED TO CONNECT YOUR DEVICE TO INTERNET</span>
          </div>
     </div>
-     <div className={` ${handleDownloadFirstVideo == index || currentDownloadingVideoLists.includes(index) ? "":"hidden"} flex flex-col items-center justify-center space-y-4 p-6`}>
+     <div className={` ${handleDownloadFirstVideo == index || currentDownloadingVideoLists.includes(String(index)) ? "":"hidden"} flex flex-col items-center justify-center space-y-4 p-6`}>
   <h2 className="text-xl font-semibold">Downloading in Progress</h2>
 
   {/* Progress bar */}
