@@ -43,6 +43,8 @@ const  VideoTutor = () => {
     const [currentDownloadingVideoLists,setCurrentDownloadingVideoLists]=useState([]);
     const [downloadPercentageList,setDownloadPercentageList]=useState([]);
     const [currentUrlDownloadingLists,setCurrentUrlDownloadingLists]=useState([]);
+    const [currentDownLoadingUniqueNames,setCurrentDownloadingUniqueName]=useState([]);
+
    
      
     // useEffect(()=>{
@@ -292,15 +294,20 @@ const  VideoTutor = () => {
                   const totalSizes = parseInt(response.headers.get('Content-Length'), 10);
             
                   // Get the start point from localStorage
-                  const startPoint = JSON.parse(localStorage.getItem('startDownloading'));
+                  let startPoint = localStorage.getItem('startDownloading');
+                  console.log("start point",startPoint);
+                  if(startPoint != null){
+                     startPoint=JSON.parse(startPoint);
+                  }
                   let chunkStart = 0;
-                   let uniqueVideoName="";
+                   let uniqueVideoName=currentDownLoadingUniqueNames[index];
                    let downloadUrls=currentUrlDownloadingLists[index];
                    let downloadedSize=0;
             
                   if (startPoint != null) {
                     const startPointItem = startPoint.find(items => items.downloadUrl === item);
                     if (startPointItem) {
+                      console.log(startPointItem);
                       chunkStart = startPointItem.chunkStart;
                       uniqueVideoName=startPointItem.uniqueName;
                       downloadUrls=startPointItem.downloadUrl;
@@ -340,15 +347,20 @@ const  VideoTutor = () => {
                    let downloadedUrls=item.downloadUrls;
                     downloadedSize += chunk.byteLength;
                     const percentage = Math.round((downloadedSize / totalSize) * 100);
-                    setDownloadPercentage(percentage);
+                     
+                     
+                    // setDownloadPercentage(percentage);
                     // console.log(`Downloading: ${percentage}%`);
           
                     // Store the chunk and update Blob parts
                     const videoBlobParts = [];
                     await dbChunks.put('videoChunks', { chunkStart, chunk, identifier: names,date:new Date() });
                     videoBlobParts.push(new Uint8Array(chunk));
-                    chunkStart += chunkSize;
-                    return {videoBlobParts,downloadedSize,chunkStart,uniqueNameSaved,downloadedUrls,finished}
+                    chunkStart = item.chunkStart + chunkSize;
+                    return {videoBlobParts,downloadedSize,chunkStart,uniqueNameSaved,downloadedUrls,finished,percentage}
+                  }
+                  else {
+                    return {finished:true}
                   }
                  })
                )
@@ -356,10 +368,41 @@ const  VideoTutor = () => {
                return savedData;
 
             }
+            const updateLocalstorage=async (savedData)=>{
+              const localData=JSON.parse(localStorage.getItem('startDownloading'));
+              console.log(localData);
+              const updatedData=await Promise.all(
+                  savedData.map((item)=>{
+                     return {
+                      chunkStart:item.chunkStart,
+                      uniqueName:item.uniqueNameSaved,
+                      downloadedSize:item.downloadedSize,
+                      downloadUrl:item.downloadedUrls,
+                      percentage:item.percentage
+                     }
+                  })
+
+              )
+
+              return updatedData;
+            }
             // Call the function to execute it
             getHeadResponseList().then((data)=>{
                saveChunkVideos(data).then((savedData)=>{
                 console.log("saved data:",savedData);
+                if(savedData.finished){
+                  console.log("finished");
+                }
+                else {
+                  updateLocalstorage(savedData).then((updatedLocal)=>{
+                    console.log("updated local:",updatedLocal);
+                    localStorage.setItem('startDownloading',JSON.stringify(updatedLocal));
+                    setResumeDownLoad((prev)=> prev + 1);
+                  }).catch((err)=>{
+                    console.log("error in update local storage",err);
+                  })
+                }
+               
                }).catch((err)=>{
                 console.log("error in saving:",err);
                })
@@ -548,10 +591,28 @@ const  VideoTutor = () => {
 
       // setDownloadPercentage(0);
       const urlClicked=filteredAsset[index].src;
+      const uniqueNameClicked=filteredAsset[index].uniqueName;
       console.log("url clicked:",urlClicked);
-      setCurrentUrlDownloadingLists((prev)=> [...prev,urlClicked]);
+      setCurrentUrlDownloadingLists((prev)=>{
+        if(prev.includes(urlClicked)){
+          console.log("already in download");
+          return [...prev]
+        }
+        else {
+          return [...prev,urlClicked]
+        }
+      });
       setCurrentVideo(index);
-      setCurrentDownloadingVideoLists((prev)=> [...prev,index]);
+      setCurrentDownloadingVideoLists((prev) => [...prev,index]);
+      setCurrentDownloadingUniqueName((prev) => {
+        if(prev.includes(uniqueNameClicked)){
+          console.log("already in download");
+          return [...prev]
+        }
+        else {
+          return [...prev,uniqueNameClicked]
+        }
+      });
       setClickedButton("download");
        setHandleDownloadFirstVideo(index);
        setDownLoadedList([...downloadedList,index]);
