@@ -21,7 +21,7 @@ const  VideoTutor = () => {
     const [startDownloadFirstVideo,setStartDownloadFirstVideo]=useState(false);
     const [fullyDownloadedFirst,setFullyDownloadedFirst]=useState("new");
     const [renderThisComponent,setRenderThisComponent]=useState(false);
-    const [downLoadLink,setDownLoadLink]=useState(false);
+    const [downLoadLink,setDownLoadLink]=useState("");
     const [downloadingVideo,setDownLoadingVideo]=useState("");
     const [downloadedList,setDownLoadedList]=useState([]);
     const [showRight,setShowRight]=useState(false);
@@ -248,283 +248,171 @@ const  VideoTutor = () => {
     //   }
     // }, [downLoadLink]);
 
-    useEffect(()=>{
-      const startDownLoading= async (downloadUrl,uniqueName,currentVideoIndex)=>{
+    useEffect(() => {
+      const startDownLoading = async (downloadUrl, uniqueName, currentVideoIndex) => {
         async function initDBChunk() {
           return await openDB('video-db', 1, {
             upgrade(db) {
               if (!db.objectStoreNames.contains('videoChunks')) {
-                db.createObjectStore('videoChunks', { keyPath: 'id',autoIncrement:true });
+                db.createObjectStore('videoChunks', { keyPath: 'id', autoIncrement: true });
               }
             },
           });
         }
+    
         let chunkStart = 0; // Default value
         let downloadedSize = 0; // Default value
-        let finished=false;
-        // Retrieve data from localStorage
-        // const data = JSON.parse(localStorage.getItem('startDownloading'));
-        
-        //  console.log("data:",data);
-        // if (data == null) {
-        //   console.log("data is Null");
-        //   chunkStart = 0;
-        //   downloadedSize = 0;
-        // } else  {
-        //   // Find the matching item based on uniqueName
-        //   const matchingItem = data.find(item => item.uniqueName == uniqueName);
-          
-        //   if (matchingItem) {
-        //     console.log(matchingItem);
-        //     chunkStart = matchingItem.chunkStart;
-        //     downloadedSize =matchingItem.downloadedSize ;
-        //   } else {
-        //     console.log("No matching item found in the stored data.");
-            
-        //   }
-        // }
-            let chunkSize=1024 * 1024;
-             
-            const dbChunks = await initDBChunk();
-             
-            const getHeadResponseList = async () => {
-              const headResponseList = await Promise.all(
-                currentUrlDownloadingLists.map(async (item,index) => {
-                  const response = await fetch(item, { method: 'HEAD' });
-                  const totalSizes = parseInt(response.headers.get('Content-Length'), 10);
-            
-                  // Get the start point from localStorage
-                  let startPoint = localStorage.getItem('startDownloading');
-                  console.log("start point",startPoint);
-                  if(startPoint != null){
-                     startPoint=JSON.parse(startPoint);
-                  }
-                  let chunkStart = 0;
-                   let uniqueVideoName=currentDownLoadingUniqueNames[index];
-                   let downloadUrls=currentUrlDownloadingLists[index];
-                   let downloadedSize=0;
-            
-                  if (startPoint != null) {
-                    const startPointItem = startPoint.find(items => items.downloadUrl === item);
-                    if (startPointItem) {
-                      console.log(startPointItem);
-                      chunkStart = startPointItem.chunkStart;
-                      uniqueVideoName=startPointItem.uniqueName;
-                      downloadUrls=startPointItem.downloadUrl;
-                      downloadedSize=startPointItem.downloadedSize;
-                       
-                    }
-                  }
-                   
-            
-                  return { totalSizes, chunkStart,uniqueVideoName,downloadUrls,downloadedSize };
-                })
-              );
-            
-              console.log("head response list", headResponseList);
-              return headResponseList; // Return if needed elsewhere
-            };
-            
-            const saveChunkVideos=async (data)=>{
-               const savedData=await Promise.all(
-                 data.map(async (item)=>{
-                  if( item.chunkStart < item.totalSizes){
-                    const response = await fetch(item.downloadUrls, {
-                      headers: { Range: `bytes=${item.chunkStart}-${item.chunkStart + chunkSize - 1}` },
-                    });
-                    if (!response.ok) {
-                      console.error('Failed to fetch video chunk');
-                     
-                      return;
-                    }
-                    
-                    const chunk = await response.arrayBuffer();
-                    chunkStart=item.chunkStart;
-                   let names=item.uniqueName;
-                   let downloadedSize=item.downloadedSize;
-                   let totalSize=item.totalSizes;
-                   let uniqueNameSaved=item.uniqueVideoName;
-                   let downloadedUrls=item.downloadUrls;
-                    downloadedSize += chunk.byteLength;
-                    const percentage = Math.round((downloadedSize / totalSize) * 100);
-                     
-                     
-                    // setDownloadPercentage(percentage);
-                    // console.log(`Downloading: ${percentage}%`);
-          
-                    // Store the chunk and update Blob parts
-                    const videoBlobParts = [];
-                    await dbChunks.put('videoChunks', { chunkStart, chunk, identifier: names,date:new Date() });
-                    videoBlobParts.push(new Uint8Array(chunk));
-                    chunkStart = item.chunkStart + chunkSize;
-                    return {videoBlobParts,downloadedSize,chunkStart,uniqueNameSaved,downloadedUrls,finished,percentage}
-                  }
-                  else {
-                    return {finished:true}
-                  }
-                 })
-               )
-
-               return savedData;
-
-            }
-            const updateLocalstorage=async (savedData)=>{
-              const localData=JSON.parse(localStorage.getItem('startDownloading'));
-              console.log(localData);
-              const updatedData=await Promise.all(
-                  savedData.map((item)=>{
-                     return {
-                      chunkStart:item.chunkStart,
-                      uniqueName:item.uniqueNameSaved,
-                      downloadedSize:item.downloadedSize,
-                      downloadUrl:item.downloadedUrls,
-                      percentage:item.percentage
-                     }
-                  })
-
-              )
-
-              return updatedData;
-            }
-            // Call the function to execute it
-            getHeadResponseList().then((data)=>{
-               saveChunkVideos(data).then((savedData)=>{
-                console.log("saved data:",savedData);
-                if(savedData.finished){
-                  console.log("finished");
-                }
-                else {
-                  updateLocalstorage(savedData).then((updatedLocal)=>{
-                    console.log("updated local:",updatedLocal);
-                    localStorage.setItem('startDownloading',JSON.stringify(updatedLocal));
-                    setResumeDownLoad((prev)=> prev + 1);
-                  }).catch((err)=>{
-                    console.log("error in update local storage",err);
-                  })
-                }
-               
-               }).catch((err)=>{
-                console.log("error in saving:",err);
-               })
-                 
-            }).catch((err)=>{
-              console.log(err);
-            })
-            
-            
-            // await fetch(downloadUrl, { method: 'HEAD' });
-            // const videoBlobParts = [];
-            // const headResponse = await fetch(downloadUrl, { method: 'HEAD' });
-            // if (!headResponse.ok) {
-            //   console.error('Failed to fetch video header');
-            //   return;
-            // }
-            // const totalSize = parseInt(headResponse.headers.get('Content-Length'), 10);
-            // if( chunkStart < totalSize){
-            //   const response = await fetch(downloadUrl, {
-            //     headers: { Range: `bytes=${chunkStart}-${chunkStart + chunkSize - 1}` },
-            //   });
-            //   if (!response.ok) {
-            //     console.error('Failed to fetch video chunk');
-               
-            //     return;
-            //   }
-              
-            //   const chunk = await response.arrayBuffer();
-            //   downloadedSize += chunk.byteLength;
-            //   const percentage = Math.round((downloadedSize / totalSize) * 100);
-            //   setDownloadPercentage(percentage);
-            //   // console.log(`Downloading: ${percentage}%`);
+        let finished = false;
     
-            //   // Store the chunk and update Blob parts
-            //   await dbChunks.put('videoChunks', { chunkStart, chunk, identifier: uniqueName,date:new Date() });
-            //   videoBlobParts.push(new Uint8Array(chunk));
-            //   chunkStart += chunkSize;
-            //   return {videoBlobParts,downloadedSize,chunkStart,uniqueName,downloadUrl,finished}
-            // }
-            // else{
-            //   console.log("finished");
-            //   finished=true;
-            //   const downloadingFilter=currentDownloadingVideoLists.filter((item)=> item != currentVideoIndex);
-            //   console.log("filtered downloading:",downloadingFilter);
-            //   setCurrentDownloadingVideoLists(downloadingFilter);
-            //   return {finished:finished};
-              
-            // }
-
-      }
-       if(downLoadLink){
-         startDownLoading(downLoadLink,downloadingVideo,currentVideo).then((data)=>{
-             if(!data.finished){
-             
-             const savedData={
-               chunkStart:data.chunkStart,
-               uniqueName:data.uniqueName,
-               downloadUrl:data.downloadUrl,
-               downloadedSize:data.downloadedSize
-             }
-             let prevStartDownloading=JSON.parse(localStorage.getItem("startDownloading"));
-             let match=[];
-             if(prevStartDownloading != null){
-              const matchItem=prevStartDownloading.find((item)=> item.uniqueName == data.uniqueName);
-              match=matchItem;
-             }
-            
-             console.log(prevStartDownloading);
-            let dataSend=[];
-                 if(prevStartDownloading){
-                  if(match){
-                    let newData=[];
-                    const newPrev=prevStartDownloading.map((item)=>{
-                      if(item.uniqueName == data.uniqueName){
-                       return savedData
-                      }
-                      else {
-                        return item
-                      }
-                      
-                  })
-                  newData=newPrev;
-                  dataSend=newData;
-                 }
-                 else {
-                  dataSend=[...prevStartDownloading,savedData]
-                 }
-                  }
-                
-                 else{
-                  let newData=[];
-                  newData.push(savedData);
-                  dataSend=newData;
-                 }
-              
-            console.log(dataSend);
-          localStorage.setItem("startDownloading",JSON.stringify(dataSend));
-        const paused=checkPause(data.uniqueName);
-         console.log("paused :",paused);
-         if(paused){
-          console.log("paused");
-         }
-         else{
-          console.log("resume downloading");
-          
-          setResumeDownLoad((prev)=> prev + 1);
-         }
-          console.log(JSON.stringify(savedData));
-          
+        let chunkSize = 1024 * 1024;
+        const dbChunks = await initDBChunk();
+    
+        const getHeadResponseList = async () => {
+          const headResponseList = await Promise.all(
+            currentUrlDownloadingLists.map(async (item, index) => {
+              const response = await fetch(item, { method: 'HEAD' });
+              const totalSizes = parseInt(response.headers.get('Content-Length'), 10);
+    
+              // Get the start point from localStorage
+              let startPoint = localStorage.getItem('startDownloading');
+              console.log('start point', startPoint);
+              if (startPoint != null) {
+                startPoint = JSON.parse(startPoint);
+              }
+              let chunkStart = 0;
+              let uniqueVideoName = currentDownLoadingUniqueNames[index];
+              let downloadUrls = currentUrlDownloadingLists[index];
+              let downloadedSize = 0;
+    
+              if (startPoint != null) {
+                const startPointItem = startPoint.find((items) => items.downloadUrl === item);
+                if (startPointItem) {
+                  console.log(startPointItem);
+                  chunkStart = startPointItem.chunkStart;
+                  uniqueVideoName = startPointItem.uniqueName;
+                  downloadUrls = startPointItem.downloadUrl;
+                  downloadedSize = startPointItem.downloadedSize;
+                }
+              }
+    
+              return { totalSizes, chunkStart, uniqueVideoName, downloadUrls, downloadedSize };
+            })
+          );
+          return headResponseList; // Return if needed elsewhere
+        };
+    
+        const saveChunkVideos = async (data) => {
+          const savedData = await Promise.all(
+            data.map(async (item) => {
+              if (item.chunkStart < item.totalSizes) {
+                console.log('item start chunk:', item.chunkStart);
+                console.log('item total sizes :', item.totalSizes);
+                const response = await fetch(item.downloadUrls, {
+                  headers: { Range: `bytes=${item.chunkStart}-${item.chunkStart + chunkSize - 1}` },
+                });
+                if (!response.ok) {
+                  console.error('Failed to fetch video chunk');
+                  return;
+                }
+    
+                const chunk = await response.arrayBuffer();
+                chunkStart = item.chunkStart;
+                let names = item.uniqueName;
+                let downloadedSize = item.downloadedSize;
+                let totalSize = item.totalSizes;
+                let uniqueNameSaved = item.uniqueVideoName;
+                let downloadedUrls = item.downloadUrls;
+                downloadedSize += chunk.byteLength;
+                const percentage = Math.round((downloadedSize / totalSize) * 100);
+    
+                // Store the chunk and update Blob parts
+                const videoBlobParts = [];
+                await dbChunks.put('videoChunks', { chunkStart, chunk, identifier: names, date: new Date() });
+                videoBlobParts.push(new Uint8Array(chunk));
+                chunkStart = item.chunkStart + chunkSize;
+                return { videoBlobParts, downloadedSize, chunkStart, uniqueNameSaved, downloadedUrls, finished, percentage };
+              } else {
+                return { finished: true , downloadedUrls:item.downloadUrls };
+              }
+            })
+          );
+    
+          return savedData;
+        };
+    
+        const updateLocalstorage = async (savedData) => {
+          const localData = JSON.parse(localStorage.getItem('startDownloading'));
+          const updatedData = await Promise.all(
+            savedData.map((item) => {
+              return {
+                chunkStart: item.chunkStart,
+                uniqueName: item.uniqueNameSaved,
+                downloadedSize: item.downloadedSize,
+                downloadUrl: item.downloadedUrls,
+                percentage: item.percentage,
+              };
+            })
+          );
+    
+          return updatedData;
+        };
+    
+        // Execute the function flow
+        try {
+          const headData = await getHeadResponseList();
+          const savedData = await saveChunkVideos(headData);
+    
+          if (savedData[0].finished) {
+            console.log('finished');
+            console.log("finished urls:",savedData[0].downloadedUrls);
+            const savedUrl=savedData[0].downloadedUrls;
+            const newUrls=currentUrlDownloadingLists.filter((item)=> item != savedUrl);
+            console.log("new urls:",newUrls);
+            setCurrentUrlDownloadingLists(newUrls);
+            return { finished: true }; // Propagate result
+          } else {
+            const updatedLocal = await updateLocalstorage(savedData);
+            console.log('updated local:', updatedLocal);
+            localStorage.setItem('startDownloading', JSON.stringify(updatedLocal));
+    
+            // Optionally, you can update state here
+            // setResumeDownLoad((prev) => prev + 1);
+    
+            return { finished: false ,uniqueName:savedData[0].uniqueNameSaved }; // Propagate result
+          }
+        } catch (err) {
+          console.log('error in promise chain:', err);
+          throw err; // Ensure proper error handling
         }
-        else {
-          console.log("finished");
-        }
-         }).catch((err)=>{
+      };
+    
+      if (downLoadLink) {
+        startDownLoading(downLoadLink, downloadingVideo, currentVideo).then((data) => {
+          console.log('data finished:', data.finished);
+          if (!data.finished) {
+            console.log("data pause check:",data.uniqueName);
+            const paused = checkPause(data.uniqueName);
+            console.log('paused :', paused);
+    
+            if (paused) {
+              console.log('paused');
+            } else {
+              console.log('resume downloading');
+              setResumeDownLoad((prev) => prev + 1);
+            }
+          } else {
+            console.log('finished');
+          }
+        }).catch((err) => {
           console.log(err);
-         })
-        
-       }
-    },[downLoadLink,resumeDownLoad]);
+        });
+      }
+    }, [downLoadLink, resumeDownLoad]);
+    
     
     const checkPause=(uniqueName)=>{
-         if(localStorage.getItem("pausedVideo") && localStorage.getItem('pausedVideo').includes(uniqueName)){
+      console.log(JSON.parse(localStorage.getItem('pausedVideo')));
+         if(localStorage.getItem("pausedVideo") && JSON.parse(localStorage.getItem('pausedVideo')).includes(uniqueName)){
           console.log(localStorage.getItem("pausedVideo"));
           return true;
          }
