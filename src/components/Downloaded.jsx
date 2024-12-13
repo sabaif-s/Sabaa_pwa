@@ -36,12 +36,12 @@ const  DownloadedVideo = ({reload}) => {
             }
             else{
                const urlVideos=allData.map((item)=>{
-                return URL.createObjectURL(item.blob);
+                return URL.createObjectURL(item.blobFILE);
                });
                console.log("url videos:",urlVideos);
                setDownloadedVideos(urlVideos);
-                const urlVideo= URL.createObjectURL(allData[0].blob);
-                console.log(allData[0].blob);
+                const urlVideo= URL.createObjectURL(allData[0].blobFILE);
+                console.log(allData[0].blobFILE);
              console.log(urlVideo);
              setVideoUrls(urlVideo);
             

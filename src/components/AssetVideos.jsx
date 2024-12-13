@@ -16,11 +16,29 @@ const  AssetVideos = () => {
                 src:secondVideo
             },
          ]
+         const realFiltered=videoAssets.filter((video)=>{
+            const downloadedLocal=localStorage.getItem('downloadedVideo');
+            
+            if(downloadedLocal != null){
+                const parse=JSON.parse(downloadedLocal);
+                
+                const matchFoundInDownload=parse.find((item)=>item == video.uniqueName);
+                if(matchFoundInDownload){
+                    return false;
+                }
+                else {
+                    return true;
+                }
+            }
+            else{
+                return true
+            }
+         })
         const filteredAssets=videoAssets.filter((video)=> video.uniqueName != localStorage.getItem(video.uniqueName));
         setVideoAsset(videoAssets);
-        setFilteredAsset(filteredAssets);
+        setFilteredAsset(realFiltered);
         setSuccessSend(true);
-     console.log("filtered asset: ", filteredAssets);
+     console.log("filtered asset: ", realFiltered);
     },[]);
    
     

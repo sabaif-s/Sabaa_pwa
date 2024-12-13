@@ -93,38 +93,194 @@ const  VideoTutor = () => {
         return await openDB('VideoDatabaseFull', 1, {
           upgrade(db) {
             if (!db.objectStoreNames.contains('videos')) {
-              db.createObjectStore('videos', { keyPath: 'id', autoIncrement: true });
+              db.createObjectStore('videos', { keyPath: 'id'});
             }
           },
         });
       }
-      const dbChunk=await initDBChunk();
+      const readChunksVideo = async (videos) => {
+        try {
+          const sendData = await Promise.all(
+            videos.map(async (item) => {
+              const dbChunk = await initDBChunk();
+              const transaction = dbChunk.transaction('videoChunks', 'readonly');
+              const store = transaction.store;
       
-      const transaction=dbChunk.transaction("videoChunks",'readonly');
-      const store=transaction.store;
-      const results = [];
-      let cursor = await store.openCursor(); // Access the raw cursor
-    
-      while (cursor) {
-        const record = cursor.value;
-    
-        // Check the attribute and add matching records
-        if (record["identifier"] === saveVideos[0]) {
-          results.push(record.chunk);
-          
+              const results = [];
+              let cursor = await store.openCursor(); // Access the raw cursor
+      
+              while (cursor) {
+                const record = cursor.value;
+      
+                // Check the attribute and add matching records
+                if (record['identifier'] === item) {
+                  results.push(record.chunk);
+                }
+      
+                cursor = await cursor.continue(); // Move to the next record
+              }
+      
+              // Ensure transaction is completed before moving to next
+              await transaction.done;
+      
+              return {
+                results: results,
+                uniqueName: item,
+              };
+            })
+          );
+          return sendData;
+        } catch (error) {
+          console.error("Error reading video chunks:", error);
+          throw error;  // Rethrow error if needed
         }
-    
-        cursor = await cursor.continue(); // Move to the next record
+      };
+      const saveToFullVideos=async (data)=>{
+        try {
+          const savedToFull = await Promise.all(
+            data.map(async (item) => {
+              const dbFull = await initDB();
+              const transaction = dbFull.transaction('videos', 'readwrite');
+              const store = transaction.store;
+              const flattenedResults = item.results.flat();
+
+              const newBlob=new Blob (flattenedResults, {type:"video/mp4"});
+              const urlBlob=URL.createObjectURL(newBlob);
+              const saveRecord={
+                id:item.uniqueName,
+                url:urlBlob,
+                uniqueName:item.uniqueName,
+                blobFILE:newBlob
+              }
+               
+             
+               await store.put(saveRecord);
+               await transaction.done;
+              return {
+                 saved:item.uniqueName
+                 
+              };
+            })
+          );
+          return savedToFull;
+        } catch (error) {
+          console.error("Error saving video to full:", error);
+          throw error;  // Rethrow error if needed
+        }
       }
-        const newBlob=new Blob (results, {type:"video/mp4"});
-        const urlBlob=URL.createObjectURL(newBlob);
-        console.log("url blob: ",urlBlob);
-      console.log('Matching records:', results);
+      const deleteFromChunks = async (deleteVideos) => {
+        try {
+          const deletedVideo = await Promise.all(
+            deleteVideos.map(async (item) => {
+              const dbChunk = await initDBChunk();
+              const transaction = dbChunk.transaction('videoChunks', 'readwrite');
+              const store = transaction.store;
+      
+               
+              let cursor = await store.openCursor(); // Access the raw cursor
+      
+              while (cursor) {
+                const record = cursor.value;
+      
+                // Check the attribute and add matching records
+                if (record['identifier'] === item.saved) {
+                   await cursor.delete();
+                }
+      
+                cursor = await cursor.continue(); // Move to the next record
+              }
+      
+              // Ensure transaction is completed before moving to next
+              await transaction.done;
+      
+              return {
+                 deletedVideo:item.saved
+              };
+            })
+          );
+          return deletedVideo;
+        } catch (error) {
+          console.error("Error in deleting video chunks:", error);
+          throw error;  // Rethrow error if needed
+        }
+      };
+      
+      const updateLocalFinished=async (updateData)=>{
+        try{
+           const previousFinishedLocal=localStorage.getItem('finishedVideo');
+           if(previousFinishedLocal != null){
+           const parsePrev=JSON.parse(previousFinishedLocal);
+           const filteredFinished=parsePrev.filter((item)=> {
+               const findInUpdate=updateData.find((itemTwo)=> itemTwo.deletedVideo != item);
+                if(findInUpdate){
+                  return true
+                }
+                else{
+                  return false
+                }
+           })
+           const previousDownLoaded=localStorage.getItem('downloadedVideo');
+           if(previousDownLoaded != null){
+            const parsed=JSON.parse(previousDownLoaded);
+            const cumulative=[...parsed,updateData[0].deletedVideo];
+            localStorage.setItem('downloadedVideo',JSON.stringify(cumulative));
+
+           }
+           else{
+            localStorage.setItem('downloadedVideo',JSON.stringify([updateData[0].deletedVideo]))
+           }
+           localStorage.setItem('finishedVideo',JSON.stringify(filteredFinished));
+         
+           return filteredFinished;
+           }
+           else {
+            console.log("no finished value to update");
+            return "no finished value to update"
+           }
+        }
+        catch (err){
+          console.log("error in update local storage")
+        }
+      }
+       const readChunks = await readChunksVideo(saveVideos);
+       console.log("read chunks:",readChunks);
+       const saveToFull=await saveToFullVideos(readChunks);
+       console.log("save To Full",saveToFull);
+       const deleteChunks=await deleteFromChunks(saveToFull);
+       console.log("deleted video:",deleteChunks);
+       const updateLocalStorageForFinishedVideo=await updateLocalFinished(deleteChunks);
+       console.log("updated local for finished",updateLocalStorageForFinishedVideo);
+    //     console.log("url blob: ",urlBlob);
+    //   console.log('Matching records:', results);
+      // const saveRecord={
+      //   url:urlBlob,
+      //   uniqueName:saveVideos[0],
+      //   blobFILE:newBlob
+      // }
+     
       // return results;
+       
+    //  const deleteTransaction = dbChunk.transaction('videoChunks', 'readwrite');
+    // const deleteStore = deleteTransaction.store;
+    // let deleteCursor = await deleteStore.openCursor();
+
+    // while (deleteCursor) {
+    //   const record = deleteCursor.value;
+
+    //   if (record["identifier"] === saveVideos[0]) {
+    //     console.log(`Deleting record with ID ${record.id} matching identifier=${saveVideos[0]}`);
+    //     await deleteCursor.delete(); // Delete the current record
+    //   }
+
+    //   deleteCursor = await deleteCursor.continue();
+    // }
+
+    // await deleteTransaction.done;
+    // console.log("Chunks deleted successfully.");
 
     }
     catch (err){
-
+          console.log(err);
     }
    }
     useEffect(()=>{
@@ -174,152 +330,10 @@ const  VideoTutor = () => {
      }
  
     },[pausedVideos]);
-    // useEffect(() => {
-      // async function initDBChunk() {
-      //   return await openDB('video-db', 1, {
-      //     upgrade(db) {
-      //       if (!db.objectStoreNames.contains('videoChunks')) {
-      //         db.createObjectStore('videoChunks', { keyPath: 'chunkStart' });
-      //       }
-      //     },
-      //   });
-      // }
     
-    
-    
-    //   async function downloadVideo(videoUrl, downloadingUnique) {
-    //     try {
-    //       const dbChunks = await initDBChunk();
-    //       const dbFull = await initDB();
-    //       const chunkSize = 1024 * 1024; // 1MB per chunk
-    //       let downloadedSize = 0;
-    //       let paused=false;
-    //       // Get total video size
-    //       const headResponse = await fetch(videoUrl, { method: 'HEAD' });
-    //       if (!headResponse.ok) {
-    //         console.error('Failed to fetch video header');
-    //         return;
-    //       }
-    //       const totalSize = parseInt(headResponse.headers.get('Content-Length'), 10);
-    //        let chunkStart=0;
-    //       // Prepare for download
-    //       const videoBlobParts = [];
-    
-    //       // Fetch and store chunks
-    //       const fetchChunks = async () => {
-    //         console.log("paused current", downloadingUnique != pausedCurrent);
-          
-    //         console.log("paused:",paused);
-    //         if( (chunkStart < totalSize) && downloadingUnique != pausedCurrent){
-    //           const response = await fetch(videoUrl, {
-    //             headers: { Range: `bytes=${chunkStart}-${chunkStart + chunkSize - 1}` },
-    //           });
-    //           if (!response.ok) {
-    //             console.error('Failed to fetch video chunk');
-    //             return;
-    //           }
-    //           console.log(pausedVideos);
-    //           const chunk = await response.arrayBuffer();
-    //           downloadedSize += chunk.byteLength;
-    //           const percentage = Math.round((downloadedSize / totalSize) * 100);
-    //           setDownloadPercentage(percentage);
-    //           console.log(`Downloading: ${percentage}%`);
-    
-    //           // Store the chunk and update Blob parts
-    //           await dbChunks.put('videoChunks', { chunkStart, chunk, identifier: 'firstVideo' });
-    //           videoBlobParts.push(new Uint8Array(chunk));
-    //           chunkStart += chunkSize;
-    //           paused= await isPaused(downloadingUnique);
-              
-    //           setTimeout(fetchChunks,100);
-    //         }
-    //         else {
-    //           console.log("paused or finished");
-    //           return true;
-    //         }
-    //         // while ( (chunkStart < totalSize)) {
-    //         //   const response = await fetch(videoUrl, {
-    //         //     headers: { Range: `bytes=${chunkStart}-${chunkStart + chunkSize - 1}` },
-    //         //   });
-    
-    //         //   if (!response.ok) {
-    //         //     console.error('Failed to fetch video chunk');
-    //         //     return;
-    //         //   }
-    //         //      console.log(pausedVideos);
-    //         //   const chunk = await response.arrayBuffer();
-    //         //   downloadedSize += chunk.byteLength;
-    //         //   const percentage = Math.round((downloadedSize / totalSize) * 100);
-    //         //   setDownloadPercentage(percentage);
-    //         //   console.log(`Downloading: ${percentage}%`);
-    
-    //         //   // Store the chunk and update Blob parts
-    //         //   await dbChunks.put('videoChunks', { chunkStart, chunk, identifier: 'firstVideo' });
-    //         //   videoBlobParts.push(new Uint8Array(chunk));
-    //         //   chunkStart += chunkSize;
-              
-    //         // }
-
-    //       };
-    
-    //      const finished=await fetchChunks();
-    //      if(finished){
-    //       const finalBlob = new Blob(videoBlobParts, { type: 'video/mp4' });
-    //       const videoURL = URL.createObjectURL(finalBlob);
     
     //       // Save Blob to the database
-    //       const videoId = await dbFull.put('videos', {
-    //         blob: finalBlob,
-    //         id:new Date(),
-    //         createdAt: new Date()
-    //       });
-    //       console.log('Download complete. Video URL:', videoURL);
-    //       console.log(`Video saved with ID: ${videoId}`);
-    //       setDownloadedLinks((prevLinks) => [...prevLinks, downloadingUnique]);
-    //       setFullyDownloadedFirst(downloadingUnique);
-    //       localStorage.setItem(downloadingUnique,downloadingUnique);
-    //       const deleteByAttribute = async (attributeName, attributeValue) => {
-    //         const tx = dbChunks.transaction('videoChunks', 'readwrite');
-    //         const store = tx.objectStore('videoChunks');
-    //         let cursor = await store.openCursor();
-    
-    //         while (cursor) {
-    //           const record = cursor.value;
-    //           if (record[attributeName] === attributeValue) {
-    //             await store.delete(cursor.key);
-    //           }
-    //           cursor = await cursor.continue();
-    //         }
-    
-    //         await tx.done;
-    //         console.log(`Records with ${attributeName} = ${attributeValue} deleted`);
-    //       };
-    //       await deleteByAttribute('identifier', 'firstVideo');
-    //      }
-    //       // Combine chunks into a final Blob
-         
-         
-    
-    //       // Delete temporary chunks
-         
-    
-          
-    
-    //       // Update download links
-         
-    
-          
-    //     } catch (error) {
-    //       console.error('Error during video download:', error);
-    //     }
-    //   }
-    
-    //   if (downLoadLink) {
-    //     console.log('Download link changed');
-         
-    //     downloadVideo(downLoadLink, downloadingVideo);
-    //   }
-    // }, [downLoadLink]);
+   
 
     useEffect(() => {
       const startDownLoading = async (downloadUrl, uniqueName, currentVideoIndex) => {
@@ -417,17 +431,9 @@ const  VideoTutor = () => {
           const localData = JSON.parse(localStorage.getItem('startDownloading'));
             console.log("local start downloading prev: ",localData);
             console.log(savedData);
-            let localDataMapped=[];
-           
-             let currentUniqueName=savedData[0].uniqueNameSaved;
-             console.log("current unique name saved: ",currentUniqueName);
             
-             if(localData != null){
-               localDataMapped=localData.filter((item)=> item.uniqueName != currentUniqueName);
-               console.log("local data [0] unique name",localData[0].uniqueName);
-             }
-             console.log("current unique name:",currentUniqueName);
-             console.log("localDataMapped:",localDataMapped);
+             
+             
           const updatedData = await Promise.all(
             savedData.map((item) => {
               return {
@@ -443,17 +449,32 @@ const  VideoTutor = () => {
              
             })
           );
-             if(localData != null){
-               if(localData[0].uniqueName != currentUniqueName){
-                return [...updatedData,...localData]
-               }
-               else{
-                return [...updatedData,...localDataMapped]
-               }
-             }
-             else{
-              return updatedData
-             }
+          if(localData != null){
+                    const pausedFilter=localData.filter((item)=>{
+                      const findPaused=updatedData.find((itemTwo)=> itemTwo.uniqueName == item.uniqueName);
+                      if(findPaused){
+                        return false;
+                      }
+                      else {
+                        return true;
+                      }
+                    })
+             return [...pausedFilter,...updatedData]
+          }
+          else {
+            return [ {
+                 
+
+                 
+              chunkStart: savedData[0].chunkStart,
+              uniqueName: savedData[0].uniqueNameSaved,
+              downloadedSize: savedData[0].downloadedSize,
+              downloadUrl: savedData[0].downloadedUrls,
+              percentage: savedData[0].percentage,
+            }
+          ]
+          }
+              
           
         };
     
@@ -463,16 +484,20 @@ const  VideoTutor = () => {
           console.log(headData);
           const savedData = await saveChunkVideos(headData);
             console.log("saved data:",savedData);
-          if (savedData[0].finished) {
+            const finishedFind=savedData.find((item)=> item.finished == true);
+            console.log("finished find:",finishedFind);
+          if (finishedFind) {
             console.log('finished');
-            console.log("finished urls:",savedData[0].downloadedUrls);
+            console.log("finished urls:",finishedFind.downloadedUrls);
             
-            const savedUrl=savedData[0].downloadedUrls;
-            const finishedUniqueName=savedData[0].uniqueNameSaved;
+            const savedUrl=finishedFind.downloadedUrls;
+            const finishedUniqueName=finishedFind.uniqueNameSaved;
             const newUrls=currentUrlDownloadingLists.filter((item)=> item != savedUrl);
             setShowRightsArray((prev)=> [...prev,savedUrl]);
             setDownloadedLinks((prev)=> [...prev,savedUrl])
             console.log("new urls:",newUrls);
+            const newUniqueFinished=currentDownLoadingUniqueNames.filter((item)=> item != finishedUniqueName);
+            setCurrentDownloadingUniqueName(newUniqueFinished);
             setCurrentUrlDownloadingLists(newUrls);
             const previousFinished=localStorage.getItem('finishedVideo');
             let savedFinishedVideos=[];
@@ -495,7 +520,7 @@ const  VideoTutor = () => {
             }
             console.log("saved video finished:", savedFinishedVideos);
             localStorage.setItem("finishedVideo",JSON.stringify(savedFinishedVideos));
-            return { finished: true }; // Propagate result
+            return { finished: true , finishedFind }; // Propagate result
           } else {
             const updatedLocal = await updateLocalstorage(savedData);
             console.log('updated local:', updatedLocal);
@@ -506,19 +531,31 @@ const  VideoTutor = () => {
               }
             });
             console.log("percent object array:",percentObjectArray);
-            const percentageObject={
-              uniqueName:savedData[0].uniqueNameSaved,
-              percent:savedData[0].percentage
+            
+            if(downloadPercentageList.length > 0){
+             const pausedFiltered=downloadPercentageList.filter((item)=> {
+               const findNotPaused=percentObjectArray.find((itemTwo)=> itemTwo.uniqueName == item.uniqueName);
+               if(findNotPaused){
+                return false;
+               }
+               else{
+                return true;
+               }
+               
+             })
+             console.log("paused percentage",pausedFiltered);
+             setDownloadPercentageList([...pausedFiltered,...percentObjectArray]);
             }
-            console.log("percentage object:",percentageObject);
-            const filteredPercentage=downloadPercentageList.filter((item)=> item.uniqueName != savedData[0].uniqueNameSaved);
-            setDownloadPercentageList((prev)=> [...filteredPercentage,percentageObject]);
+            else {
+              setDownloadPercentageList(percentObjectArray);
+            }
+            
             localStorage.setItem('startDownloading', JSON.stringify(updatedLocal));
     
             // Optionally, you can update state here
             // setResumeDownLoad((prev) => prev + 1);
     
-            return { finished: false ,uniqueName:savedData[0].uniqueNameSaved }; // Propagate result
+            return { finished: false ,savedData:savedData}; // Propagate result
           }
         } catch (err) {
           console.log('error in promise chain:', err);
@@ -526,15 +563,15 @@ const  VideoTutor = () => {
         }
       };
     
-      if (downLoadLink) {
+      if (downLoadLink && currentUrlDownloadingLists.length > 0) {
         startDownLoading(downLoadLink, downloadingVideo, currentVideo).then((data) => {
           console.log('data finished:', data.finished);
           if (!data.finished) {
-            console.log("data pause check:",data.uniqueName);
-            const paused = checkPause(data.uniqueName);
-            console.log('paused :', paused);
+            // console.log("data pause check:",data.savedData);
+            // const paused = checkPause(data.savedData);
+            // console.log('paused :', paused);
     
-            if (paused) {
+            if (false) {
               console.log('paused');
             } else {
               console.log('resume downloading');
@@ -542,6 +579,7 @@ const  VideoTutor = () => {
             }
           } else {
             console.log('finished');
+            setResumeDownLoad((prev)=> prev + 1);
             setSaveFullVideo((prev)=> prev + 1);
           }
         }).catch((err) => {
