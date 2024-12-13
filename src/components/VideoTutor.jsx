@@ -48,6 +48,7 @@ const  VideoTutor = () => {
     const [hideDownloadS,setHideDownloads]=useState([]);
     const [showPauses,setShowPauses]=useState([]);
     const [showRightsArray,setShowRightsArray]=useState([]);
+    const [saveFullVideo,setSaveFullVideo]=useState(0);
 
    
      
@@ -63,7 +64,69 @@ const  VideoTutor = () => {
     useEffect(()=>{
           console.log("download percentage list :",downloadPercentageList);
     },[downloadPercentageList]);
+   useEffect(()=>{
+          if(saveFullVideo > 0){
+            const toSaveVideos=localStorage.getItem('finishedVideo');
+            if(toSaveVideos != null){
+             const saveVideos=JSON.parse(toSaveVideos);
+             console.log("time to save:", saveVideos);
+             savingVideoToFull(saveVideos);
+            }
+            else{
+              console.log('no finished video to save to full');
+            }
+          }
+   },[saveFullVideo]);
 
+   const savingVideoToFull= async (saveVideos)=>{
+    try {
+      async function initDBChunk() {
+        return await openDB('video-db', 1, {
+          upgrade(db) {
+            if (!db.objectStoreNames.contains('videoChunks')) {
+              db.createObjectStore('videoChunks', { keyPath: 'id', autoIncrement: true });
+            }
+          },
+        });
+      }
+      async function initDB() {
+        return await openDB('VideoDatabaseFull', 1, {
+          upgrade(db) {
+            if (!db.objectStoreNames.contains('videos')) {
+              db.createObjectStore('videos', { keyPath: 'id', autoIncrement: true });
+            }
+          },
+        });
+      }
+      const dbChunk=await initDBChunk();
+      
+      const transaction=dbChunk.transaction("videoChunks",'readonly');
+      const store=transaction.store;
+      const results = [];
+      let cursor = await store.openCursor(); // Access the raw cursor
+    
+      while (cursor) {
+        const record = cursor.value;
+    
+        // Check the attribute and add matching records
+        if (record["identifier"] === saveVideos[0]) {
+          results.push(record.chunk);
+          
+        }
+    
+        cursor = await cursor.continue(); // Move to the next record
+      }
+        const newBlob=new Blob (results, {type:"video/mp4"});
+        const urlBlob=URL.createObjectURL(newBlob);
+        console.log("url blob: ",urlBlob);
+      console.log('Matching records:', results);
+      // return results;
+
+    }
+    catch (err){
+
+    }
+   }
     useEffect(()=>{
        
          if(successSend){
@@ -112,25 +175,17 @@ const  VideoTutor = () => {
  
     },[pausedVideos]);
     // useEffect(() => {
-      async function initDBChunk() {
-        return await openDB('video-db', 1, {
-          upgrade(db) {
-            if (!db.objectStoreNames.contains('videoChunks')) {
-              db.createObjectStore('videoChunks', { keyPath: 'chunkStart' });
-            }
-          },
-        });
-      }
+      // async function initDBChunk() {
+      //   return await openDB('video-db', 1, {
+      //     upgrade(db) {
+      //       if (!db.objectStoreNames.contains('videoChunks')) {
+      //         db.createObjectStore('videoChunks', { keyPath: 'chunkStart' });
+      //       }
+      //     },
+      //   });
+      // }
     
-    //   async function initDB() {
-    //     return await openDB('VideoDatabaseFull', 1, {
-    //       upgrade(db) {
-    //         if (!db.objectStoreNames.contains('videos')) {
-    //           db.createObjectStore('videos', { keyPath: 'id', autoIncrement: true });
-    //         }
-    //       },
-    //     });
-    //   }
+    
     
     //   async function downloadVideo(videoUrl, downloadingUnique) {
     //     try {
@@ -350,7 +405,7 @@ const  VideoTutor = () => {
                 chunkStart = item.chunkStart + chunkSize;
                 return { videoBlobParts, downloadedSize, chunkStart, uniqueNameSaved, downloadedUrls, finished, percentage };
               } else {
-                return { finished: true , downloadedUrls:item.downloadUrls };
+                return { finished: true , downloadedUrls:item.downloadUrls, uniqueNameSaved:item.uniqueVideoName };
               }
             })
           );
@@ -413,12 +468,33 @@ const  VideoTutor = () => {
             console.log("finished urls:",savedData[0].downloadedUrls);
             
             const savedUrl=savedData[0].downloadedUrls;
+            const finishedUniqueName=savedData[0].uniqueNameSaved;
             const newUrls=currentUrlDownloadingLists.filter((item)=> item != savedUrl);
             setShowRightsArray((prev)=> [...prev,savedUrl]);
             setDownloadedLinks((prev)=> [...prev,savedUrl])
             console.log("new urls:",newUrls);
             setCurrentUrlDownloadingLists(newUrls);
-          
+            const previousFinished=localStorage.getItem('finishedVideo');
+            let savedFinishedVideos=[];
+            if(previousFinished != null){
+              const prevVideoFinished=JSON.parse(previousFinished);
+              console.log(prevVideoFinished);
+              if(prevVideoFinished.includes(finishedUniqueName)){
+                console.log("already finished");
+                savedFinishedVideos=[finishedUniqueName];
+              }
+              else {
+                prevVideoFinished.push(finishedUniqueName);
+              console.log(prevVideoFinished);
+              savedFinishedVideos=prevVideoFinished;
+              }
+              
+            }
+            else{
+              savedFinishedVideos=[finishedUniqueName]
+            }
+            console.log("saved video finished:", savedFinishedVideos);
+            localStorage.setItem("finishedVideo",JSON.stringify(savedFinishedVideos));
             return { finished: true }; // Propagate result
           } else {
             const updatedLocal = await updateLocalstorage(savedData);
@@ -466,6 +542,7 @@ const  VideoTutor = () => {
             }
           } else {
             console.log('finished');
+            setSaveFullVideo((prev)=> prev + 1);
           }
         }).catch((err) => {
           console.log(err);
