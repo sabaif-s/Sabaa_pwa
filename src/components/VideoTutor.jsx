@@ -44,6 +44,10 @@ const  VideoTutor = () => {
     const [downloadPercentageList,setDownloadPercentageList]=useState([]);
     const [currentUrlDownloadingLists,setCurrentUrlDownloadingLists]=useState([]);
     const [currentDownLoadingUniqueNames,setCurrentDownloadingUniqueName]=useState([]);
+    const [resumeVideos,setResumeVideos]=useState([]);
+    const [hideDownloadS,setHideDownloads]=useState([]);
+    const [showPauses,setShowPauses]=useState([]);
+    const [showRightsArray,setShowRightsArray]=useState([]);
 
    
      
@@ -56,6 +60,9 @@ const  VideoTutor = () => {
     //     console.log("video Asset 0 no video");
     //   }
     // },[videoAsset]);
+    useEffect(()=>{
+          console.log("download percentage list :",downloadPercentageList);
+    },[downloadPercentageList]);
 
     useEffect(()=>{
        
@@ -75,13 +82,24 @@ const  VideoTutor = () => {
           if(filteredAsset.length > 0){
             console.log("pausing video");
             const pausedVideo=filteredAsset[pausingVideo].uniqueName;
+            const pausedURLS=filteredAsset[pausingVideo].src;
             setPausedCurrent(pausedVideo);
-             
+             const filteredUrls=currentUrlDownloadingLists.filter((item)=> item != pausedURLS);
+             const filteredCurrentDownloadingUniqueName=currentDownLoadingUniqueNames.filter((item)=> item != pausedVideo);
             setPausedVideos((prev)=> [...prev,pausedVideo]);
+            setCurrentUrlDownloadingLists(filteredUrls);
+            setCurrentDownloadingUniqueName(filteredCurrentDownloadingUniqueName);
+            setResumeVideos((prev)=> [...prev,pausedVideo]);
           }
                    
          }
     },[pausingVideo]);
+
+    useEffect(()=>{
+             if(resumeVideos.length > 0){
+              console.log("resume videos if download clicked again:",resumeVideos);
+             }
+    },[resumeVideos]);
     useEffect(()=>{
       console.log('paused videos',pausedVideos);
      if(pausedVideos.length > 0){
@@ -317,14 +335,14 @@ const  VideoTutor = () => {
     
                 const chunk = await response.arrayBuffer();
                 chunkStart = item.chunkStart;
-                let names = item.uniqueName;
+                let names = item.uniqueVideoName;
                 let downloadedSize = item.downloadedSize;
                 let totalSize = item.totalSizes;
                 let uniqueNameSaved = item.uniqueVideoName;
                 let downloadedUrls = item.downloadUrls;
                 downloadedSize += chunk.byteLength;
                 const percentage = Math.round((downloadedSize / totalSize) * 100);
-    
+                     console.log("percentage :",percentage);
                 // Store the chunk and update Blob parts
                 const videoBlobParts = [];
                 await dbChunks.put('videoChunks', { chunkStart, chunk, identifier: names, date: new Date() });
@@ -342,37 +360,83 @@ const  VideoTutor = () => {
     
         const updateLocalstorage = async (savedData) => {
           const localData = JSON.parse(localStorage.getItem('startDownloading'));
+            console.log("local start downloading prev: ",localData);
+            console.log(savedData);
+            let localDataMapped=[];
+           
+             let currentUniqueName=savedData[0].uniqueNameSaved;
+             console.log("current unique name saved: ",currentUniqueName);
+            
+             if(localData != null){
+               localDataMapped=localData.filter((item)=> item.uniqueName != currentUniqueName);
+               console.log("local data [0] unique name",localData[0].uniqueName);
+             }
+             console.log("current unique name:",currentUniqueName);
+             console.log("localDataMapped:",localDataMapped);
           const updatedData = await Promise.all(
             savedData.map((item) => {
               return {
+                
                 chunkStart: item.chunkStart,
                 uniqueName: item.uniqueNameSaved,
                 downloadedSize: item.downloadedSize,
                 downloadUrl: item.downloadedUrls,
                 percentage: item.percentage,
               };
+              
+             
+             
             })
           );
-    
-          return updatedData;
+             if(localData != null){
+               if(localData[0].uniqueName != currentUniqueName){
+                return [...updatedData,...localData]
+               }
+               else{
+                return [...updatedData,...localDataMapped]
+               }
+             }
+             else{
+              return updatedData
+             }
+          
         };
     
         // Execute the function flow
         try {
           const headData = await getHeadResponseList();
+          console.log(headData);
           const savedData = await saveChunkVideos(headData);
-    
+            console.log("saved data:",savedData);
           if (savedData[0].finished) {
             console.log('finished');
             console.log("finished urls:",savedData[0].downloadedUrls);
+            
             const savedUrl=savedData[0].downloadedUrls;
             const newUrls=currentUrlDownloadingLists.filter((item)=> item != savedUrl);
+            setShowRightsArray((prev)=> [...prev,savedUrl]);
+            setDownloadedLinks((prev)=> [...prev,savedUrl])
             console.log("new urls:",newUrls);
             setCurrentUrlDownloadingLists(newUrls);
+          
             return { finished: true }; // Propagate result
           } else {
             const updatedLocal = await updateLocalstorage(savedData);
             console.log('updated local:', updatedLocal);
+            const percentObjectArray=savedData.map((item)=> {
+              return {
+                uniqueName:item.uniqueNameSaved,
+                percent:item.percentage
+              }
+            });
+            console.log("percent object array:",percentObjectArray);
+            const percentageObject={
+              uniqueName:savedData[0].uniqueNameSaved,
+              percent:savedData[0].percentage
+            }
+            console.log("percentage object:",percentageObject);
+            const filteredPercentage=downloadPercentageList.filter((item)=> item.uniqueName != savedData[0].uniqueNameSaved);
+            setDownloadPercentageList((prev)=> [...filteredPercentage,percentageObject]);
             localStorage.setItem('startDownloading', JSON.stringify(updatedLocal));
     
             // Optionally, you can update state here
@@ -462,6 +526,10 @@ const  VideoTutor = () => {
            console.log("current Url Downloading Lists:",currentUrlDownloadingLists);
            
     },[currentUrlDownloadingLists]);
+
+    useEffect(()=>{
+            console.log("hide downloads:",hideDownloadS);
+    },[hideDownloadS]);
     
    
     const handleError=()=>{
@@ -491,6 +559,8 @@ const  VideoTutor = () => {
         }
       });
       setCurrentVideo(index);
+      setHideDownloads((prev)=> [...prev,parseInt(index)]);
+      setShowPauses((prev)=> [...prev,parseInt(index)]);
       setCurrentDownloadingVideoLists((prev) => [...prev,index]);
       setCurrentDownloadingUniqueName((prev) => {
         if(prev.includes(uniqueNameClicked)){
@@ -501,17 +571,57 @@ const  VideoTutor = () => {
           return [...prev,uniqueNameClicked]
         }
       });
+      checkResume(parseInt(index));
+      setResumeDownLoad((prev)=> prev + 1);
+      setPausingVideo(99999);
       setClickedButton("download");
        setHandleDownloadFirstVideo(index);
        setDownLoadedList([...downloadedList,index]);
        setPauseFirst(index);
-       setDownLoadingVideo(videoAsset[index].uniqueName);
-       setDownLoadLink(videoAsset[index].src);
+       setDownLoadingVideo(filteredAsset[index].uniqueName);
+       setDownLoadLink(filteredAsset[index].src);
        setStartDownloadFirstVideo(true);
        setClickedList(index);
     }
+    const checkResume=(index)=>{
+      
+        const getPausedVideos=localStorage.getItem('pausedVideo');
+        console.log(getPausedVideos);
+        if(getPausedVideos != null){
+           const filteredLocal=JSON.parse(getPausedVideos).filter((item)=> item != filteredAsset[index].uniqueName);
+           console.log(getPausedVideos);
+           console.log("filtered local ", filteredLocal);
+           localStorage.setItem('pausedVideo',JSON.stringify(filteredLocal));
+        }
+        else{
+          console.log("null local storage");
+        }
+      
+       
+    }
+    const handlePause=(event)=>{
+      const index=event.target.getAttribute("id");
+      console.log("paused index:",index);
+          setPauseFirst(index);
+          setPausingVideo(index);
+          const filteredHideDownloads=hideDownloadS.filter((item)=> item != index);
+          setHideDownloads(filteredHideDownloads);
+          const filteredShowPauses=showPauses.filter((item)=> item != index);
+          setShowPauses(filteredShowPauses);
+        
+    }
     const viewVideosClicked=()=>{
        setActiveButton(1);
+    }
+    const percentFunction= (index)=>{
+      const findPercent=downloadPercentageList.find((item)=> item.uniqueName == filteredAsset[index].uniqueName);
+      if(findPercent){
+        console.log("find percent :",findPercent);
+        return findPercent.percent;
+      }
+      else{
+        return 0;
+      }
     }
  
   
@@ -598,24 +708,16 @@ className="w-1/2 h-full flex justify-center items-center overflow-x-hidden">
  onClick={handleDownloadFirst}
  id={index}
    src="/download.png"
-   className={` ${currentVideo == index && clickedButton == "download" ? "hidden":""} ${downloadedLinks.includes(asset.uniqueName) ? "hidden":"" } ${handleDownloadFirstVideo == index ? "hidden":""} ${fullyDownloadedFirst == asset.uniqueName  ? "hidden":""} h-full w-auto hover:scale-110 transition-transform duration-300`}
+   className={` ${hideDownloadS.includes(index) ? "hidden":""} ${downloadedLinks.includes(asset.src) ? "hidden":""} h-full w-auto hover:scale-110 transition-transform duration-300`}
    alt=""
  />
   <img
- onClick={()=>{
-  if(pausingVideo == index){
-   setClickedButton('pause');
-   setHandleDownloadFirstVideo(9999);
-  }
-  else{
-    setPauseFirst(index);
-    setPausingVideo(index);
-    setHandleDownloadFirstVideo(index);
-  }
-  
- }}
+ onClick={
+  handlePause
+}
+  id={index}
    src="/pause.png"
-   className={` ${pauseFirst == index ? "":"hidden"} ${clickedButton == "pause" ? "hidden":""} ${fullyDownloadedFirst == asset.uniqueName ? "hidden":""} h-full w-auto hover:scale-110 transition-transform duration-300`}
+   className={` ${showPauses.includes(index) ? "":"hidden"} ${downloadedLinks.includes(asset.src) ? "hidden":""} h-full w-auto hover:scale-110 transition-transform duration-300`}
    alt=""
  />
   <img
@@ -623,7 +725,7 @@ className="w-1/2 h-full flex justify-center items-center overflow-x-hidden">
      console.log("finished clicked");
  }}
    src="/right.avif"
-   className={` ${downloadedLinks.includes(asset.uniqueName) ? "":"hidden"} h-full w-auto hover:scale-110 transition-transform duration-300`}
+   className={` ${downloadedLinks.includes(asset.src) ? "":"hidden"} h-full w-auto hover:scale-110 transition-transform duration-300`}
    alt=""
  />
 </div>
@@ -648,16 +750,16 @@ className="w-1/2 h-full flex justify-center items-center overflow-x-hidden">
     <div className="w-full h-2 bg-gray-200 rounded-full">
       <div
         className="h-2 bg-blue-500 rounded-full"
-        style={{ width: `${downloadPercentage}%` }}
+        style={{ width: `${percentFunction(index)}%` }}
       ></div>
     </div>
 
     {/* Percentage Text */}
     <span
       className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-6 text-xl font-medium text-blue-500"
-      style={{ left: `${downloadPercentage}%` }}
+      style={{ left: `${percentFunction(index)}%` }}
     >
-      {downloadPercentage}%
+      {percentFunction(index)}%
     </span>
   </div>
 
