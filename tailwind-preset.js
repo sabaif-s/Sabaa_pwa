@@ -10,6 +10,7 @@ module.exports={
           'full': '9999px',
           'twelve':"12px",
           'large': '16px',
+          'extraLarge':"30px"
         },
         extend: {
           colors: {
@@ -145,7 +146,11 @@ module.exports={
               '100%': {
                  backgroundColor: '#86d5fa'
               }
-            }
+            },
+            slideNext: {
+              '0%': { transform: 'translateX(-100%)' },
+              '100%': { transform: 'translateX(0)' },
+            },
            
           },
           animation: {
@@ -174,6 +179,7 @@ module.exports={
              bgChange:"bgChange 4s ease-in-out infinite",
              bgChange2:"bgChange2 4s ease-in-out infinite",
              bgChange3:"bgChange3 4s ease-in-out infinite",
+             slideNext: 'slideNext 0.5s ease-out ',
           },
         
         },
