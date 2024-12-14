@@ -4,6 +4,7 @@ const  PdfDownloads = () => {
     const [firstLoaded,setFirstLoaded]=useState(false);
     const [secondLoaded,setSecondLoaded]=useState(false);
     const [fadeInContent,setFadeInContent]=useState(false);
+    const [downloadPdf,setDownloadPdf]=useState(0);
     const {assetPdf}=AssetPdf();
     const pdfArray=Array.from({length:12},(_,i)=> i);
 
@@ -21,8 +22,50 @@ const  PdfDownloads = () => {
 
         }
     },[assetPdf]);
+    useEffect(()=>{
+        const downloadingPdf= async ()=>{
+            try{
+
+            }
+            catch(err){
+                
+            }
+        }
+          if(downloadPdf > 0){
+            console.log("download starts")
+            downloadingPdf();
+          }
+    },[downloadPdf]);
     const handleClickedDownload=(e)=>{
        console.log("clicked button:",e.currentTarget.getAttribute("id"));
+       const index=e.currentTarget.getAttribute("id");
+       const currentDownloadedPdf=assetPdf[index].uniqueID;
+       const prevLocalDownload=localStorage.getItem("downloadingPdf");
+       console.log(prevLocalDownload);
+       let savedData=[];
+       const objectNew={
+        uniqueID:assetPdf[index].uniqueID,
+        src:assetPdf[index].src,
+        percent:0,
+        topic:assetPdf[index].topic
+    }
+       if(prevLocalDownload != null){
+           const parse=JSON.parse(prevLocalDownload);
+           const foundPrev=parse.find((item)=> item.uniqueID == assetPdf[index].uniqueID);
+           if(foundPrev){
+            localStorage.setItem("downloadingPdf",JSON.stringify(parse));
+           }
+           else{
+            savedData=[...parse,objectNew];
+            localStorage.setItem("downloadingPdf",JSON.stringify(savedData));
+           }
+       }
+       else{
+      
+        savedData=[objectNew]
+        localStorage.setItem("downloadingPdf",JSON.stringify(savedData))
+       }
+       setDownloadPdf((prev)=>prev + 1);
     }
     return (
         <div className='w-full h-screen overflow-hidden' >
