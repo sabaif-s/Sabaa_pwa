@@ -1,9 +1,10 @@
 import React,{useEffect,useState} from 'react';
-
+import AssetPdf from './AssetPdf';
 const  PdfDownloads = () => {
     const [firstLoaded,setFirstLoaded]=useState(false);
     const [secondLoaded,setSecondLoaded]=useState(false);
     const [fadeInContent,setFadeInContent]=useState(false);
+    const {assetPdf}=AssetPdf();
     const pdfArray=Array.from({length:12},(_,i)=> i);
 
     useEffect(()=>{
@@ -13,6 +14,16 @@ const  PdfDownloads = () => {
             },1500);
            }
     },[firstLoaded,secondLoaded]);
+    useEffect(()=>{
+        console.log("asset pdf:",assetPdf);
+        if(assetPdf.length > 0){
+            console.log('asset pdf');
+
+        }
+    },[assetPdf]);
+    const handleClickedDownload=(e)=>{
+       console.log("clicked button:",e.currentTarget.getAttribute("id"));
+    }
     return (
         <div className='w-full h-screen overflow-hidden' >
                <img
@@ -30,15 +41,18 @@ const  PdfDownloads = () => {
                       <div className='w-full h-full overflow-y-auto bg-black bg-opacity-50 flex flex-col justify-start items-center pt-6' >
                                 <div className='w-full bg-gradient-to-r from-gray-300 to-gray-500 flex flex-wrap justify-between items-center' >
                                     {
-                                        pdfArray.map((item,index)=>(
+                                       assetPdf.length >0 && assetPdf.map((item,index)=>(
                                             <div className='basis-1/2 p-4 flex flex-col gap-y-2 justify-center items-center' >
                                             <div className='w-20 h-20' >
                                                <img src={index % 2 == 0 ? "pdfIconsTwo.png":"pdfIconOne.png"} className='w-full h-full' alt="" />
                                             </div>
                                             <div className='w-full flex justify-center items-center' >
-                                                 <span className='text-blue-600 text-2xl font-bold' >UNIT ONE</span>
+                                                 <span className='text-blue-600 text-2xl font-bold' >{item.topic}</span>
                                             </div>
-                                            <button className='p-2 bg-gradient-to-t from-blue-600 to-blue-300' >
+                                            <button
+                                            id={index}
+                                            onClick={handleClickedDownload}
+                                            className='p-2 bg-gradient-to-t from-blue-600 to-blue-300' >
                                                <span className='text-white text-2xl'>Download</span>
                                             </button>
                                           </div>
