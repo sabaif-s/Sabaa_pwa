@@ -5,6 +5,7 @@ import HomePageELearn from './components/HomePageElearn'
 import VideoTutor from './components/VideoTutor'
 import ContentGrade from './components/ContentGrades'
 import QuizQuestions from './components/quizes/QuizQuestions'
+import PdfDownloads from './components/pdf/PdfDownloads'
  function App() {
   const [count, setCount] = useState(0)
 
@@ -18,6 +19,8 @@ import QuizQuestions from './components/quizes/QuizQuestions'
         <Route path='/content' element={<ContentGrade/> } >
         </Route>
         <Route path='/quiz' element={<QuizQuestions/> } >
+        </Route>
+        <Route path='/pdf' element={<PdfDownloads/> } >
         </Route>
       </Routes>
     
