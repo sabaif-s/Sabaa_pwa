@@ -42,7 +42,9 @@ const  PdfDownloads = () => {
                                 <div className='w-full bg-gradient-to-r from-gray-300 to-gray-500 flex flex-wrap justify-between items-center' >
                                     {
                                        assetPdf.length >0 && assetPdf.map((item,index)=>(
-                                            <div className='basis-1/2 p-4 flex flex-col gap-y-2 justify-center items-center' >
+                                            <div
+                                            id={index}
+                                            className='basis-1/2 p-4 flex flex-col gap-y-2 justify-center items-center' >
                                             <div className='w-20 h-20' >
                                                <img src={index % 2 == 0 ? "pdfIconsTwo.png":"pdfIconOne.png"} className='w-full h-full' alt="" />
                                             </div>
