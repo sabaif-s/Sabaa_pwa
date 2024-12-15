@@ -1,10 +1,12 @@
 import React,{useEffect,useState} from 'react';
 import AssetPdf from './AssetPdf';
+import { openDB } from 'idb';
 const  PdfDownloads = () => {
     const [firstLoaded,setFirstLoaded]=useState(false);
     const [secondLoaded,setSecondLoaded]=useState(false);
     const [fadeInContent,setFadeInContent]=useState(false);
     const [downloadPdf,setDownloadPdf]=useState(0);
+    const [percentArrayObject,setPercentArrayObject]=useState([]);
     const {assetPdf}=AssetPdf();
     const pdfArray=Array.from({length:12},(_,i)=> i);
 
@@ -23,9 +25,114 @@ const  PdfDownloads = () => {
         }
     },[assetPdf]);
     useEffect(()=>{
+        async function initDB() {
+            return openDB("pdfChunk", 1, {
+              upgrade(db) {
+                if (!db.objectStoreNames.contains("pdf-chunk")) {
+                  db.createObjectStore("pdf-chunk",{ keyPath: 'id'});
+                }
+              },
+            });
+          }
+        const findTotalSize=async (item)=>{
+            const response=await fetch(item.src, {method:"HEAD"});
+            const contentLength=response.headers.get("Content-Length");
+            if(!contentLength){
+                throw new Error('Content-Length header is missing');
+            }
+            const totalSize = parseInt(contentLength, 10);
+            return totalSize;
+        }
+        const updateLocalStorage=async (uniqueID,data)=>{
+           const parsedLocal=JSON.parse(localStorage.getItem("downloadingPdf"));
+           const updatedData=parsedLocal.map((item)=>{
+            if(item.uniqueID == uniqueID ){
+                   return {
+                    uniqueID:uniqueID,
+                    src:data.src,
+                    totalSize:data.totalSize,
+                    chunkStart:data.newChunkStart,
+                    percentage:data.percentage,
+                    topic:data.topic
+                   }
+            }
+            else{
+                return item
+            }
+           })
+           localStorage.setItem("downloadingPdf",JSON.stringify(updatedData));
+           const foundInPrev=percentArrayObject.find((item)=>item.uniqueID == uniqueID);
+           if(foundInPrev){
+            const changeOnlyThis=percentArrayObject.filter((item)=> item.uniqueID != uniqueID);
+            setPercentArrayObject([...changeOnlyThis,{uniqueID:uniqueID,percent:data.percentage}]);
+           }
+           else {
+            setPercentArrayObject((prev)=> [...prev,{uniqueID:uniqueID,percent:data.percentage}]);
+           }
+           return updatedData;
+        }
+        const downloadedItems=async (item)=>{
+            const chunkSize=1024 * 1024;
+            let totalSize=0;
+            let chunkStart=0;
+            if(item.totalSize == 0){
+                console.log("find total size:");
+                const totalSizeFound=await findTotalSize(item);
+                console.log("total size:",totalSizeFound);
+                totalSize=totalSizeFound;
+                
+            }
+            else{
+             totalSize=item.totalSize;
+             chunkStart=item.chunkStart
+            }
+             if(chunkStart < totalSize){
+                console.log("item chunk start is less than total");
+                const response = await fetch(item.src, {
+                    headers: { Range: `bytes=${chunkStart}-${chunkStart + chunkSize - 1}` },
+                  });
+                  if (!response.ok) {
+                    console.error('Failed to fetch video chunk');
+                    return;
+                  }
+      
+                  const chunk = await response.arrayBuffer();
+                  const src=item.src
+                  const topic=item.topic
+                  const newChunkStart=chunkStart + chunkSize;
+                  const idNEW=chunkStart+item.uniqueID
+                  let percentages = Math.round((newChunkStart / totalSize) * 100);
+                  let percentage=percentages > 100 ? 100:percentages;
+                  const savedChunk=new Uint8Array(chunk);
+                  const db=await initDB();
+                 const saved= await db.put("pdf-chunk",{chunk:savedChunk,id:idNEW,chunkStart:chunkStart});
+                //   console.log(`Stored chunk: ${savedChunk}`);
+                console.log(saved);
+                const updateLocal=await updateLocalStorage(item.uniqueID,{percentage,newChunkStart,totalSize,src,topic});
+                  
+                  
+             }
+             else{
+                console.log(`${item.uniqueID} finished`);
+             }
+        }
+        const downloadPdfFunction=async (pdfArray)=>{
+              const downloadedChunk=await Promise.all(
+                pdfArray.map(async (item)=>{
+                    const downloadedItem= await downloadedItems(item);
+                })
+              )
+        }
         const downloadingPdf= async ()=>{
             try{
-
+             const previousDownload=localStorage.getItem("downloadingPdf");
+             if(previousDownload != null){
+                const parsed=JSON.parse(previousDownload);
+                const downloadPdf=await downloadPdfFunction(parsed);
+             }
+             else{
+                console.log("no downloading Pdf");
+             }
             }
             catch(err){
                 
@@ -47,7 +154,9 @@ const  PdfDownloads = () => {
         uniqueID:assetPdf[index].uniqueID,
         src:assetPdf[index].src,
         percent:0,
-        topic:assetPdf[index].topic
+        topic:assetPdf[index].topic,
+        chunkStart:0,
+        totalSize:0,
     }
        if(prevLocalDownload != null){
            const parse=JSON.parse(prevLocalDownload);
@@ -66,6 +175,15 @@ const  PdfDownloads = () => {
         localStorage.setItem("downloadingPdf",JSON.stringify(savedData))
        }
        setDownloadPdf((prev)=>prev + 1);
+    }
+    const percentFor=(uniqueID)=>{
+      const found=percentArrayObject.find((item)=> item.uniqueID == uniqueID);
+      if(found){
+        return found.percent;
+      }
+      else{
+        return 0;
+      }
     }
     return (
         <div className='w-full h-screen overflow-hidden' >
@@ -97,8 +215,9 @@ const  PdfDownloads = () => {
                                             <button
                                             id={index}
                                             onClick={handleClickedDownload}
-                                            className='p-2 bg-gradient-to-t from-blue-600 to-blue-300' >
-                                               <span className='text-white text-2xl'>Download</span>
+                                            className='p-2 bg-gradient-to-t from-blue-600 to-blue-300 relative' >
+                                               <span className='text-white text-2xl relative z-20'>Download</span>
+                                               <span style={{width:percentFor(item.uniqueID) +"%"}} className='absolute top-0 left-0 h-full bg-opacity-75 bg-green-400' ></span>
                                             </button>
                                           </div>
                                         ))
