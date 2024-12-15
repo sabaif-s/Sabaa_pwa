@@ -7,6 +7,8 @@ const  PdfDownloads = () => {
     const [fadeInContent,setFadeInContent]=useState(false);
     const [downloadPdf,setDownloadPdf]=useState(0);
     const [percentArrayObject,setPercentArrayObject]=useState([]);
+    const [continueDownload,setContinueDownload]=useState(0);
+    const [finishedPdf,setFinishedPdf]=useState([]);
     const {assetPdf}=AssetPdf();
     const pdfArray=Array.from({length:12},(_,i)=> i);
 
@@ -53,7 +55,8 @@ const  PdfDownloads = () => {
                     totalSize:data.totalSize,
                     chunkStart:data.newChunkStart,
                     percentage:data.percentage,
-                    topic:data.topic
+                    topic:data.topic,
+                    finished:data.finished
                    }
             }
             else{
@@ -71,10 +74,11 @@ const  PdfDownloads = () => {
            }
            return updatedData;
         }
-        const downloadedItems=async (item)=>{
+        const downloadedItems = async (item)=>{
             const chunkSize=1024 * 1024;
             let totalSize=0;
             let chunkStart=0;
+            let finished=false;
             if(item.totalSize == 0){
                 console.log("find total size:");
                 const totalSizeFound=await findTotalSize(item);
@@ -108,27 +112,60 @@ const  PdfDownloads = () => {
                  const saved= await db.put("pdf-chunk",{chunk:savedChunk,id:idNEW,chunkStart:chunkStart});
                 //   console.log(`Stored chunk: ${savedChunk}`);
                 console.log(saved);
-                const updateLocal=await updateLocalStorage(item.uniqueID,{percentage,newChunkStart,totalSize,src,topic});
+                const updateLocal=await updateLocalStorage(item.uniqueID,{percentage,newChunkStart,totalSize,src,topic,finished});
+                console.log(updateLocal);
+                return {finished:false}
                   
                   
              }
              else{
+              finished=true;
+              const src=item.src
+              const topic=item.topic
+              const newChunkStart=chunkStart + chunkSize;
+               
+              let percentages = Math.round((newChunkStart / totalSize) * 100);
+              let percentage=percentages > 100 ? 100:percentages;
+              const updateLocal=await updateLocalStorage(item.uniqueID,{percentage,newChunkStart,totalSize,src,topic,finished});
+              console.log("updated local finished:",updateLocal);
+              return {
+                finished:true,
+                uniqueID:item.uniqueID
+              }
                 console.log(`${item.uniqueID} finished`);
              }
         }
-        const downloadPdfFunction=async (pdfArray)=>{
+        const downloadPdfFunction = async (pdfArray)=>{
               const downloadedChunk=await Promise.all(
                 pdfArray.map(async (item)=>{
                     const downloadedItem= await downloadedItems(item);
+                     console.log(downloadedItem);
+                     return downloadedItem;
                 })
               )
+              return downloadedChunk;
         }
         const downloadingPdf= async ()=>{
             try{
              const previousDownload=localStorage.getItem("downloadingPdf");
              if(previousDownload != null){
                 const parsed=JSON.parse(previousDownload);
-                const downloadPdf=await downloadPdfFunction(parsed);
+                const unfinished=parsed.filter((item)=> !item.finished);
+                const downloadPdf=await downloadPdfFunction(unfinished);
+                console.log("download pdf:",downloadPdf);
+                const finishedUnique=downloadPdf.filter((item)=> item.finished);
+                console.log("finished unique:",finishedUnique);
+                if(unfinished.length == 0){
+                  // setContinueDownload((prev)=> prev + 1);
+                  
+                }
+                else {
+                  
+                  setContinueDownload((prev)=> prev + 1);
+                }
+                console.log(finishedUnique);
+                
+
              }
              else{
                 console.log("no downloading Pdf");
@@ -142,10 +179,11 @@ const  PdfDownloads = () => {
             console.log("download starts")
             downloadingPdf();
           }
-    },[downloadPdf]);
+    },[downloadPdf,continueDownload]);
     const handleClickedDownload=(e)=>{
        console.log("clicked button:",e.currentTarget.getAttribute("id"));
        const index=e.currentTarget.getAttribute("id");
+       console.log(typeof(index));
        const currentDownloadedPdf=assetPdf[index].uniqueID;
        const prevLocalDownload=localStorage.getItem("downloadingPdf");
        console.log(prevLocalDownload);
@@ -157,24 +195,28 @@ const  PdfDownloads = () => {
         topic:assetPdf[index].topic,
         chunkStart:0,
         totalSize:0,
+        finished:false
     }
        if(prevLocalDownload != null){
            const parse=JSON.parse(prevLocalDownload);
            const foundPrev=parse.find((item)=> item.uniqueID == assetPdf[index].uniqueID);
+           console.log("found prev:",foundPrev);
            if(foundPrev){
             localStorage.setItem("downloadingPdf",JSON.stringify(parse));
            }
            else{
-            savedData=[...parse,objectNew];
+            savedData=[objectNew,...parse];
             localStorage.setItem("downloadingPdf",JSON.stringify(savedData));
+            setDownloadPdf((prev)=>prev + 1);
            }
        }
        else{
       
         savedData=[objectNew]
-        localStorage.setItem("downloadingPdf",JSON.stringify(savedData))
+        localStorage.setItem("downloadingPdf",JSON.stringify(savedData));
+        setDownloadPdf((prev)=>prev + 1);
        }
-       setDownloadPdf((prev)=>prev + 1);
+       
     }
     const percentFor=(uniqueID)=>{
       const found=percentArrayObject.find((item)=> item.uniqueID == uniqueID);
