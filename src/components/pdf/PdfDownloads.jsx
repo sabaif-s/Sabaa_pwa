@@ -14,7 +14,9 @@ const  PdfDownloads = () => {
     const [readyRender,setReadyRender]=useState(false);
     const [showPdfViewer,setShowPdfViewer]=useState(false);
     const [fileBlob,setFileBlob]=useState(null);
-    const {assetPdf}=AssetPdf();
+    const {assetPdf,failedPdf}=AssetPdf();
+    const [failedDownload,setFailedDownload]=useState(0);
+    const [showFailure,setShowFailure]=useState(false);
     const pdfArray=Array.from({length:12},(_,i)=> i);
 
     useEffect(()=>{
@@ -25,12 +27,30 @@ const  PdfDownloads = () => {
            }
     },[firstLoaded,secondLoaded]);
     useEffect(()=>{
+            if(failedDownload > 0){
+              console.log("failed download:",failedDownload);
+              setShowFailure(true);
+              setTimeout(()=>{
+                setShowFailure(false);
+              },2500);
+            }
+    },[failedDownload]);
+    useEffect(()=>{
         console.log("asset pdf:",assetPdf);
         if(assetPdf.length > 0){
-            console.log('asset pdf');
+            console.log('asset pdf:',assetPdf);
 
         }
+         
     },[assetPdf]);
+    useEffect(()=>{
+      console.log("failed pdf:",failedPdf);
+      if(failedPdf.length > 0){
+          console.log('asset pdf:',failedPdf);
+
+      }
+       
+  },[failedPdf]);
     useEffect(()=>{
      const getDownloads=localStorage.getItem('downloadingPdf');
      if(getDownloads == null){
@@ -184,6 +204,9 @@ console.log(finishedPdf);
             }
              if(chunkStart < totalSize){
                 console.log("item chunk start is less than total");
+                
+
+                
                 const response = await fetch(item.src, {
                     headers: { Range: `bytes=${chunkStart}-${chunkStart + chunkSize - 1}` },
                   });
@@ -191,7 +214,9 @@ console.log(finishedPdf);
                     console.error('Failed to fetch video chunk');
                     return;
                   }
-      
+                
+                
+               
                   const chunk = await response.arrayBuffer();
                   const src=item.src
                   const topic=item.topic
@@ -276,7 +301,8 @@ console.log(finishedPdf);
           }
     },[downloadPdf,continueDownload]);
     const handleClickedDownload=(e)=>{
-       console.log("clicked button:",e.currentTarget.getAttribute("id"));
+      if(navigator.onLine){
+        console.log("clicked button:",e.currentTarget.getAttribute("id"));
        const index=e.currentTarget.getAttribute("id");
        console.log(typeof(index));
        const currentDownloadedPdf=assetPdf[index].uniqueID;
@@ -298,6 +324,7 @@ console.log(finishedPdf);
            console.log("found prev:",foundPrev);
            if(foundPrev){
             localStorage.setItem("downloadingPdf",JSON.stringify(parse));
+            setDownloadPdf((prev)=> prev + 1);
            }
            else{
             savedData=[objectNew,...parse];
@@ -311,6 +338,12 @@ console.log(finishedPdf);
         localStorage.setItem("downloadingPdf",JSON.stringify(savedData));
         setDownloadPdf((prev)=>prev + 1);
        }
+      }
+      else{
+        console.log("offline");
+        setFailedDownload((prev)=> prev + 1);
+      }
+       
        
     }
     const percentFor=(uniqueID)=>{
@@ -365,13 +398,23 @@ console.log(finishedPdf);
     }
     return (
         <div className='w-full h-screen overflow-hidden' >
-          {/* <div className='w-20 h-20 absolute z-50 right-2 top-2' >
-               <img src="alarm.png" className='rounded-full w-full h-full animate-notificationPulse ' alt="" />
-               <span className='absolute w-8 h-8 right-10 z-10 text-2xl bg-green-300 p-2 text-white animate-fadeIn rounded-full top-4 flex justify-center items-center' >1</span>
-          </div>
-          <div className='absolute z-50 inset-0 flex justify-center items-center' >
-             <img src="alarmNotify.jpg" className='w-full h-64' alt="" />
-          </div> */}
+         
+          {
+            showFailure && (
+              <div className='absolute z-50 inset-0 flex justify-center items-center' >
+                <div className=' w-full relative overflow-x-hidden flex justify-center items-center' >
+                <img src="alarmNotify.jpg" className='w-full h-64' alt="" />
+                <div className=' flex absolute pl-8 pt-8 justify-center items-center inset-x-24 inset-y-14 z-10' >
+                <span className="text-red-600 w-full overflow-x-hidden word-break font-bold text-sm md:text-xl rounded-md shadow-md text-center">
+        YOU need To Connect To Internet To Download
+      </span>
+                </div>
+                </div>
+             
+           </div>
+            )
+          }
+          
                <img
                onLoad={()=>{
                 setFirstLoaded(true);
