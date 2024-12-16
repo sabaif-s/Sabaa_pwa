@@ -360,6 +360,9 @@ console.log(finishedPdf);
       setShowPdfViewer(true);
       console.log(fileBlob);
     }
+    const handleBack=()=>{
+      setShowPdfViewer(false);
+    }
     return (
         <div className='w-full h-screen overflow-hidden' >
           {/* <div className='w-20 h-20 absolute z-50 right-2 top-2' >
@@ -416,7 +419,7 @@ console.log(finishedPdf);
                    }
                    {
                     showPdfViewer && (
-                      <PDFViewer pdfBlob={fileBlob} />
+                      <PDFViewer pdfBlob={fileBlob} handlingBack={handleBack} />
                     )
                    }
             
