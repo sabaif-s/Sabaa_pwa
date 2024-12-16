@@ -1,7 +1,6 @@
 import React,{useEffect,useState} from 'react';
 import { openDB } from 'idb';
-import firstVideo from '../assets/videos/firstVideo.mp4';
-import secondVideo from '../assets/videos/secondVideo.mp4';
+ 
 import DownloadedVideo from './Downloaded';
 import AssetVideos from './AssetVideos';
 import { use } from 'react';
@@ -744,7 +743,7 @@ const  VideoTutor = () => {
         <>
             {
               true && (
-                <div className='w-full min-h-screen flex flex-col justify-start items-center bg-gradient-to-t from-gray-300 to-gray-400 pt-4' >
+                <div className='w-full animate-fadeIn min-h-screen flex flex-col justify-start items-center bg-gradient-to-t from-gray-300 to-gray-400 pt-4' >
                 <div className='w-full p-4 flex justify-center items-center bg-white text-gray-400 mb-6' >
                  <h1 className='text-3xl font-semibold' >
                      Videos

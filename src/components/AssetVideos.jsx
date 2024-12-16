@@ -1,6 +1,6 @@
 import React,{useEffect,useState} from 'react';
-import firstVideo from '../assets/videos/firstVideo.mp4';
-import secondVideo from '../assets/videos/secondVideo.mp4';
+import firstVideo from '../assets/videos/firstVideo.MOV';
+import secondVideo from '../assets/videos/secondVideo.MOV';
 const  AssetVideos = () => {
     const [videoAsset,setVideoAsset]=useState([]);
     const [filteredAsset,setFilteredAsset]=useState([]);

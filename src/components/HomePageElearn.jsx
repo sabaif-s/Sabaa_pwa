@@ -1,97 +1,141 @@
-import React,{useEffect, useState} from 'react';
-import { Link } from 'react-router-dom';
-import ScreenSize from '../hooks/ScreenSize';
-const  HomePageELearn = () => {
-    const {largeMobile}=ScreenSize();
-    const [height,setHeight]=useState(0);
-    const [slideDown,setSlideDown]=useState(0);
-    const [animateInDivStart,setAnimateInDivStart]=useState(false);
-    const [animateDiv,setAnimateDiv]=useState(false);
-    useEffect(()=>{
-        if(largeMobile){
-                     setHeight("620px");
-        }
-        else{
-                   setHeight("360px");
-        }
-                  console.log(largeMobile);
-    },[largeMobile]);
-    useEffect(()=>{
-        const interval=setInterval(()=>{
-                           setSlideDown((prev)=> prev+ 1);
-                           
-        },1000);
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import ScreenSize from "../hooks/ScreenSize";
 
-        return ()=>{
-            clearInterval(interval);
-        }
-    },[]);
-    useEffect(()=>{
-       if(slideDown == 6){
-        setAnimateInDivStart(true);
-       }
-    },[slideDown]);
-    useEffect(() => {
-        let interval; // Declare interval at the top
-      
-        if (animateInDivStart) {
-            console.log(animateInDivStart);
-            const timeout = setTimeout(() => {
-                interval = setInterval(() => {
-                    setAnimateDiv((prev) => prev + 1);
-                }, 2000);
-            }, 1500);
-    
-            // Cleanup function
-            return () => {
-                clearTimeout(timeout); // Clear timeout if the effect is cleaned up early
-                clearInterval(interval); // Clear the interval if it exists
-            };
-        }
-    
-        // Cleanup in case `animateInDivStart` is false
-        return () => {
-            clearInterval(interval);
-        };
-    }, [animateInDivStart]);
-    return (
-        <div className='w-full h-screen bg-gradient-to-t from-cyan-700 to-sky-300 flex justify-center items-center' >
-        <div className='w-3/4 relative  bg-red-100' style={{height:height}} >
-                 <div className={`w-full flex justify-center py-4 rounded-full ${slideDown < 1 ? "opacity-0":""} ${slideDown == 1 ? "animate-slideDownFast":""}  ${largeMobile ? "h-40 ":"h-24"}  bottom-0 bg-[#C1E8FF] absolute z-50`} >
-                    <div className={`w-2/3 ${animateDiv > 1 ? "animate-bgChange":""} rounded-lg ${animateDiv == 1 && animateDiv < 3 ? "animate-flip3d":""}  flex justify-center items-center h-full bg-white text-gray-400`}
-                     >
-                           <span className={`${animateDiv > 1 ? "text-white":""}  ${animateDiv == 1 ? "animate-flip3dB":""} text-xl font-bold`} >Interactive Lessons</span>
-                    </div>
-                 </div>
-                 <Link to="/videoTutor">
-                 <div className={`w-full flex py-4 justify-center items-start rounded-full ${slideDown < 2 ? "opacity-0":""}  ${slideDown == 2 ? "animate-slideDownFast":""}   ${largeMobile ? "h-40 bottom-20":"h-24 bottom-12"}  bg-[#7DA0CA] absolute z-40`} >
-                 <div
-                //  onClick={handleVideoClicked}
-                 className={`w-2/3 ${animateDiv > 2 ? "animate-bgChange3":""} cursor-pointer rounded-lg ${animateDiv == 2 && animateDiv < 4 ? "animate-flip3d":""}  flex justify-center items-start h-full bg-white text-gray-400`}
-                     >
-                           <span className={`${animateDiv > 2 ? "text-white":""}  ${animateDiv == 2 ? "animate-flip3dB":""} text-xl font-bold`} >Video Tutorials</span>
-                    </div>
-                 </div>
-                 </Link>
-                 <div className={`w-full flex py-4 justify-center items-start rounded-full  ${slideDown < 3 ? "opacity-0":""} ${slideDown == 3 ? "animate-slideDownFast":""}   ${largeMobile ? "h-40 bottom-40":"h-24 bottom-24"}  bg-[#5483B3] absolute z-30`} >
-                 <div className={`w-2/3 ${animateDiv > 3 ? "animate-bgChange2":""} rounded-lg ${animateDiv == 3 && animateDiv < 5 ? "animate-flip3d":""}  flex justify-center items-start h-full bg-white text-gray-400`}
-                     >
-                           <span className={`${animateDiv > 3 ? "text-white":""}  ${animateDiv == 3 ? "animate-flip3dB":""} text-xl font-bold`} >Quizzes</span>
-                    </div>
-                 </div>
-                 <div className={`w-full py-4 rounded-full flex justify-center items-start  ${slideDown < 4 ? "opacity-0":""} ${slideDown == 4 ? "animate-slideDownFast":""}   ${largeMobile ? "h-40 bottom-60":"h-24 bottom-36"}   bg-sky-200 absolute z-20`} >
-                 <div className={`w-2/3  hover:bg-opacity-75 transition-all ${animateDiv > 4 ? "animate-bgChange bg-opacity-25":""} rounded-lg ${animateDiv == 4 && animateDiv < 6 ? "animate-flip3d":""}  flex justify-center items-start h-full bg-white text-gray-400`}
-                     >
-                           <span className={`${animateDiv > 4 ? "text-white":""}  ${animateDiv == 4 ? "animate-flip3dB":""} text-xl font-bold`} >Downloadable PDFs</span>
-                    </div>
-                 </div>
-                 <div className={`w-full py-4 rounded-full flex justify-center items-start  ${slideDown < 5 ? "opacity-0":""} ${slideDown == 5 ? "animate-slideDownFast":""}   ${largeMobile ? "h-40 bottom-80":"h-24 bottom-48"}  bg-gray-400 absolute z-10`} >
-                 </div>
-                 <div className={`w-full rounded-full  ${slideDown < 6 ? "opacity-0":""} ${slideDown == 6 ? "animate-slideDownFast":""}   ${largeMobile ? "h-40 bottom-96":"h-24 bottom-60"}  bg-green-300 absolute z-0`} >
-                 </div>
+const HomePageELearn = () => {
+  const { largeMobile } = ScreenSize();
+  const [height, setHeight] = useState(0);
+  const [slideDown, setSlideDown] = useState(0);
+  const [animateInDivStart, setAnimateInDivStart] = useState(false);
+  const [animateDiv, setAnimateDiv] = useState(false);
+  const [stopAnimate,setStopAnimate]=useState(false);
+
+  useEffect(() => {
+    setHeight(largeMobile ? "620px" : "500px");
+  }, [largeMobile]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSlideDown((prev) => prev + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (slideDown === 4) {
+      setAnimateInDivStart(true);
+    }
+  }, [slideDown]);
+  useEffect(()=>{
+         setTimeout(()=>{
+                   setStopAnimate(true);
+         },20000);
+  },[animateInDivStart]);
+
+  useEffect(() => {
+    let interval;
+    if (animateInDivStart) {
+      const timeout = setTimeout(() => {
+        interval = setInterval(() => {
+          setAnimateDiv((prev) => prev + 1);
+        }, 2000);
+      }, 500);
+
+      return () => {
+        clearTimeout(timeout);
+        clearInterval(interval);
+      };
+    }
+    return () => clearInterval(interval);
+  }, [animateInDivStart]);
+
+  return (
+    <div className="w-full h-screen bg-gradient-to-b from-blue-900 via-sky-600 to-sky-300 flex justify-center items-center">
+      <div
+        className="w-11/12 lg:w-3/4 bg-white rounded-xl shadow-lg overflow-hidden relative"
+        style={{ height }}
+      >
+        {/* Lesson Section */}
+        <div
+          className={`transition-all transform ${
+            slideDown < 1 ? "opacity-0 translate-y-10" : "opacity-100 translate-y-0"
+          } absolute w-full flex justify-center py-4 bottom-0 z-50`}
+        >
+          <div
+            className={`w-2/3 h-24 lg:h-40 flex justify-center items-center bg-gradient-to-r from-blue-300 to-blue-500 text-white text-xl font-bold rounded-lg shadow-md ${
+              animateDiv > 1 && !stopAnimate ? "animate-pulse" : ""
+            }`}
+          >
+            Interactive Lessons
+          </div>
         </div>
-</div>
-    );
+
+        {/* Video Tutorials */}
+        <Link to="/videoTutor">
+          <div
+            className={`transition-all transform ${
+              slideDown < 2 ? "opacity-0 translate-y-10" : "opacity-100 translate-y-0"
+            } absolute w-full flex justify-center py-4 bottom-20 lg:bottom-20 z-40`}
+          >
+            <div
+              className={`w-2/3 h-24 lg:h-40 flex justify-center items-center bg-gradient-to-r from-indigo-400 to-indigo-600 text-white text-xl font-bold rounded-lg shadow-md ${
+                animateDiv > 2 && !stopAnimate ? "animate-pulse" : ""
+              }`}
+            >
+              Video Tutorials
+            </div>
+          </div>
+        </Link>
+
+        {/* Quizzes Section */}
+        <div
+          className={`transition-all transform ${
+            slideDown < 3 ? "opacity-0 translate-y-10" : "opacity-100 translate-y-0"
+          } absolute w-full flex justify-center py-4 bottom-40 lg:bottom-40 z-30`}
+        >
+          <div
+            className={`w-2/3 h-24 lg:h-40 flex justify-center items-center bg-gradient-to-r from-purple-400 to-purple-600 text-white text-xl font-bold rounded-lg shadow-md ${
+              animateDiv > 3 && !stopAnimate ? "animate-pulse" : ""
+            }`}
+          >
+            Quizzes
+          </div>
+        </div>
+
+        {/* Downloadable PDFs */}
+        <Link to="/pdf" >
+       
+        <div
+         
+          className={`transition-all transform ${
+            slideDown < 4 ? "opacity-0 translate-y-10" : "opacity-100 translate-y-0"
+          } absolute w-full flex justify-center py-4 bottom-64 lg:bottom-60 z-20`}
+        >
+          <div
+            className={`w-2/3 h-24 lg:h-40 flex justify-center items-center bg-gradient-to-r from-green-400 to-green-600 text-white text-xl font-bold rounded-lg shadow-md ${
+              animateDiv > 4 && !stopAnimate ? "animate-pulse" : ""
+            }`}
+          >
+            Downloadable PDFs
+          </div>
+        </div>
+        </Link>
+
+        {/* Footer Decoration */}
+        <div
+          className={`transition-all transform ${
+            slideDown < 5 ? "opacity-0 translate-y-10" : "opacity-100 translate-y-0"
+          } absolute w-full h-24 lg:h-40 bottom-72 lg:bottom-80 bg-gray-400 rounded-full z-10`}
+        ></div>
+
+        <div
+          className={`transition-all transform ${
+            slideDown < 6 ? "opacity-0 translate-y-10" : "opacity-100 translate-y-0"
+          } absolute w-full h-24 lg:h-40 bottom-80 lg:bottom-96 bg-green-300 rounded-full z-0`}
+        ></div>
+      </div>
+    </div>
+  );
 };
 
-export default  HomePageELearn;
+export default HomePageELearn;

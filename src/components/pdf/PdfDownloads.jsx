@@ -397,7 +397,7 @@ console.log(finishedPdf);
       setShowPdfViewer(false);
     }
     return (
-        <div className='w-full h-screen overflow-hidden' >
+        <div className='w-full h-screen overflow-hidden animate-fadeIn' >
          
           {
             showFailure && (

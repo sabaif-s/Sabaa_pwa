@@ -17,14 +17,11 @@ export default defineConfig({
     },
 
   },
-  server: {
-    strictPort: true,
-  },
-   
   plugins: [
     react({
       fastRefresh: true, // Ensure fastRefresh is enabled
     }),
+    
     viteStaticCopy({
       targets: [
         {
@@ -73,4 +70,6 @@ export default defineConfig({
       // }, // Prevent default service worker generation
     }),
   ],
+  assetsInclude: ['**/*.MOV'],
+  base: '/',
 })
