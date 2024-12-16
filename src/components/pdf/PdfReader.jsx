@@ -39,8 +39,11 @@ const PDFViewer = ({ pdfBlob,handlingBack }) => {
         renderPage(pdfDoc, 1);
       } catch (error) {
         console.error("Error rendering PDF:", error);
-        containerRef.current.innerHTML =
-          '<p class="text-red-500 text-center">Failed to load PDF. Please try again.</p>';
+        if(containerRef.current){
+            containerRef.current.innerHTML =
+            '<p className="text-red-500 text-center">Failed to load PDF. Please try again.</p>';
+        }
+       
       } finally {
         setLoading(false);
         // Revoke the object URL to release memory
