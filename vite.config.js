@@ -7,8 +7,20 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 export default defineConfig({
   build:{
     outDir:"dist",
-    manifest:true
+    manifest:true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          pdfjs: ['pdfjs-dist'], // Separate PDF.js into its own chunk
+        },
+      },
+    },
+
   },
+  server: {
+    strictPort: true,
+  },
+   
   plugins: [
     react({
       fastRefresh: true, // Ensure fastRefresh is enabled

@@ -151,6 +151,15 @@ module.exports={
               '0%': { transform: 'translateX(-100%)' },
               '100%': { transform: 'translateX(0)' },
             },
+            pulse: {
+              '0%, 100%': { transform: 'scale(1)' },
+              '50%': { transform: 'scale(1.1)' },
+            },
+            shake: {
+              '0%, 100%': { transform: 'translateX(0)' },
+              '25%': { transform: 'translateX(-2px)' },
+              '75%': { transform: 'translateX(2px)' },
+            },
            
           },
           animation: {
@@ -180,6 +189,8 @@ module.exports={
              bgChange2:"bgChange2 4s ease-in-out infinite",
              bgChange3:"bgChange3 4s ease-in-out infinite",
              slideNext: 'slideNext 0.5s ease-out ',
+             notificationPulse: 'pulse 1.5s infinite', // Define custom pulse animation
+            shake: 'shake 0.5s ease-in-out infinite'
           },
         
         },
