@@ -50,7 +50,7 @@ const HomePageELearn = () => {
   }, [animateInDivStart]);
 
   return (
-    <div className="w-full h-screen bg-gradient-to-b from-blue-900 via-sky-600 to-sky-300 flex justify-center items-center">
+    <div className="w-full h-screen lg:px-60 bg-gradient-to-b from-blue-900 via-sky-600 to-sky-300 flex justify-center items-center">
       <div
         className="w-11/12 lg:w-3/4 bg-white rounded-xl shadow-lg overflow-hidden relative"
         style={{ height }}
@@ -75,7 +75,7 @@ const HomePageELearn = () => {
           <div
             className={`transition-all transform ${
               slideDown < 2 ? "opacity-0 translate-y-10" : "opacity-100 translate-y-0"
-            } absolute w-full flex justify-center py-4 bottom-20 lg:bottom-20 z-40`}
+            } absolute w-full flex justify-center py-4 bottom-20 lg:bottom-28 z-40`}
           >
             <div
               className={`w-2/3 h-24 lg:h-40 flex justify-center items-center bg-gradient-to-r from-indigo-400 to-indigo-600 text-white text-xl font-bold rounded-lg shadow-md ${
@@ -91,7 +91,7 @@ const HomePageELearn = () => {
         <div
           className={`transition-all transform ${
             slideDown < 3 ? "opacity-0 translate-y-10" : "opacity-100 translate-y-0"
-          } absolute w-full flex justify-center py-4 bottom-40 lg:bottom-40 z-30`}
+          } absolute w-full flex justify-center py-4 bottom-40 lg:bottom-56 z-30`}
         >
           <div
             className={`w-2/3 h-24 lg:h-40 flex justify-center items-center bg-gradient-to-r from-purple-400 to-purple-600 text-white text-xl font-bold rounded-lg shadow-md ${
@@ -109,7 +109,7 @@ const HomePageELearn = () => {
          
           className={`transition-all transform ${
             slideDown < 4 ? "opacity-0 translate-y-10" : "opacity-100 translate-y-0"
-          } absolute w-full flex justify-center py-4 bottom-64 lg:bottom-60 z-20`}
+          } absolute w-full flex justify-center py-4 bottom-64 lg:bottom-96 z-20`}
         >
           <div
             className={`w-2/3 h-24 lg:h-40 flex justify-center items-center bg-gradient-to-r from-green-400 to-green-600 text-white text-xl font-bold rounded-lg shadow-md ${

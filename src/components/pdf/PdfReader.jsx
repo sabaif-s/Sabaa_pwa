@@ -2,10 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 
 // Configure PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url
-).toString();
+
+
 
 const PDFViewer = ({ pdfBlob, handlingBack }) => {
   const containerRef = useRef(null);
