@@ -12,7 +12,7 @@ const AssetPdf = () => {
       topic: "Relation",
     },
     {
-      src: () => import("../../assets/pdfAsset/secondPdf.pdf"),
+      src: () => import("../../assets/pdfAsset/thirdPdf.pdf"),
       uniqueID: "secondPdf",
       topic: "Function",
     },
@@ -70,24 +70,4 @@ const AssetPdf = () => {
 export default AssetPdf;
 
 
-// import firstPdf from '../../assets/pdfAsset/firstPdf.pdf';
-// import secondPdf from '../../assets/pdfAsset/secondPdf.pdf';
-// const AssetPdf = () => {
-//      const assetPdf=[
-//         {
-//             src:firstPdf,
-//             uniqueID:"firstPdf",
-//             topic:"Relation"
-
-//         },
-//         {
-//             src:secondPdf,
-//             uniqueID:"secondPdf",
-//             topic:"Function"
-            
-//         }
-//      ]
-//     return {assetPdf}
-// };
-
-// export default AssetPdf;
+ 
