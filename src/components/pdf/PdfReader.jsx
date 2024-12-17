@@ -26,10 +26,17 @@ const PDFViewer = ({ pdfBlob, handlingBack }) => {
         setLoading(true);
 
         // Load the PDF document
-        const loadingTask = pdfjsLib.getDocument(pdfUrl);
+        const loadingTask = pdfjsLib.getDocument({
+          url: pdfUrl // 64 KB chunks
+        });
         const pdfDoc = await loadingTask.promise;
+        const pageFirst=await pdfDoc.getPage(1);
+        console.log(pageFirst);
         setPdf(pdfDoc);
         setNumPages(pdfDoc.numPages);
+        console.log(pdfDoc);
+        console.log(loadingTask);
+        console.log(pdfDoc.numPages);
 
         // Render the first page
         renderPage(pdfDoc, 1);
