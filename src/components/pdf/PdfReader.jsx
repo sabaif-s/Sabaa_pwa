@@ -88,6 +88,9 @@ const PDFViewer = ({ pdfBlob, handlingBack }) => {
   };
 
   const calculateScale = () => {
+    if(containerRef.current != null){
+
+ 
     const containerWidth = containerRef.current.offsetWidth;
     const containerHeight = containerRef.current.offsetHeight;
     const pageAspectRatio = 1.5; // Adjust aspect ratio based on PDF content
@@ -96,6 +99,7 @@ const PDFViewer = ({ pdfBlob, handlingBack }) => {
       containerWidth / (pageAspectRatio * 600),
       containerHeight / 900
     );
+  }
   };
 
   const goToNextPage = async () => {
@@ -119,7 +123,9 @@ const PDFViewer = ({ pdfBlob, handlingBack }) => {
   };
 
   return (
-    <div className="relative z-30 w-full h-full bg-gray-50 flex flex-col items-center justify-center overflow-auto border border-gray-300 rounded-md shadow-lg p-4">
+    <div
+     ref={containerRef}
+    className="relative z-30 w-full h-full bg-gray-50 flex flex-col items-center justify-center overflow-auto border border-gray-300 rounded-md shadow-lg p-4">
       {loading ? (
         <div className="flex justify-center items-center">
           <span className="text-xl text-gray-600">Loading PDF...</span>
@@ -127,7 +133,7 @@ const PDFViewer = ({ pdfBlob, handlingBack }) => {
       ) : (
         <>
           <div
-            ref={containerRef}
+           
             id="pdf-container"
             className="relative w-full h-2/3 flex items-center justify-center bg-red-100 overflow-auto"
             style={{ maxHeight: "100vh" }}
