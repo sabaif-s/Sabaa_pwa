@@ -12,7 +12,7 @@ const AssetPdf = () => {
       topic: "Relation",
     },
     {
-      src: () => import("../../assets/pdfAsset/thirdPdf.pdf"),
+      src: () => import("../../assets/pdfAsset/ThirdPdf.pdf"),
       uniqueID: "secondPdf",
       topic: "Function",
     },
