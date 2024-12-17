@@ -389,11 +389,11 @@ console.log(finishedPdf);
       const index=e.currentTarget.getAttribute("id");
       const uniqueID=assetPdf[index].uniqueID;
       const fileBlob=await getPdfBlob(uniqueID);
-      const newUrl=URL.createObjectURL(fileBlob);
-      window.open(newUrl, '_blank');
-      // setFileBlob(fileBlob);
-      // setShowPdfViewer(true);
-      // console.log(fileBlob);
+      // const newUrl=URL.createObjectURL(fileBlob);
+      // window.open(newUrl, '_blank');
+      setFileBlob(fileBlob);
+      setShowPdfViewer(true);
+      console.log(fileBlob);
     }
     const handleBack=()=>{
       setShowPdfViewer(false);
