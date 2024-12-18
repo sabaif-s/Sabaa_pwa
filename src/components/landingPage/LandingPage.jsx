@@ -1,5 +1,6 @@
 import React,{useEffect,useState} from 'react';
 import AssetLanding from './AssetLanding';
+import { Link } from "react-router-dom";
 const  LandingPage = () => {
     const [clickedButton,setClickedButton]=useState("");
     const [animateOut,setAnimateOut]=useState(false);
@@ -74,8 +75,10 @@ const  LandingPage = () => {
         <div className={` ${imageLoaded ? "animate-fadeIn":"opacity-0"} w-full min-h-screen bg-gradient-to-b from-blue-400 to-gray-300 relative`} >
                     <img onLoad={()=>{
                         setImageLoaded(true);
-                    }} src="/public/rb_68784_11zon.jpg" className={` ${animateInImage ? "animate-slideLeft":"opacity-0"} w-full  absolute bottom-10`} alt="" />
+                    }} src="/rb_68784_11zon.jpg" className={` ${animateInImage ? "animate-slideLeft":"opacity-0"} w-full  absolute bottom-10`} alt="" />
                     <div className={`w-1/2 absolute left-0 h-full flex flex-col justify-center items-end pr-10 ${animateInButton ? "animate-fadeIn":"opacity-0"} `} >
+                    <Link to="/content" >
+                   
                     <button className="px-6 py-3 font-semibold text-white rounded-lg bg-gradient-to-r from-blue-500 via-teal-500 to-indigo-500 
     transform transition duration-300 ease-in-out 
     hover:scale-105 hover:from-blue-400 hover:via-teal-400 hover:to-indigo-400 
@@ -83,6 +86,7 @@ const  LandingPage = () => {
         <span className='tracking-wide' >JOIN US</span>
       
     </button>
+    </Link>
                             
                     </div>
                     <div className={` ${animateInDescription ? "animate-fadeIn":"opacity-0"} w-full overflow-x-hidden h-1/2 absolute z-20 py-10 px-4 flex flex-col justify-start items-center gap-y-4`}>

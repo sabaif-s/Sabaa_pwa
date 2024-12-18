@@ -1,5 +1,5 @@
 import React from 'react';
-
+import { Link } from 'react-router-dom';
 const ContentGrade = () => {
   return (
     <div className="w-full px-4 py-4 min-h-screen overflow-x-hidden bg-gradient-to-br from-blue-400 via-yellow-400 to-indigo-700">
@@ -11,6 +11,8 @@ const ContentGrade = () => {
       </div>
 
       {/* Content */}
+      <Link to="/select" >
+    
       <div className="w-full flex flex-col items-center gap-y-6 h-auto p-6 animate-fadeIn">
         {/* Grade 9 */}
         <div className="w-2/3 cursor-pointer flex justify-center items-center rounded-full h-64 bg-white p-4 transform transition-all duration-300 hover:scale-105 hover:shadow-2xl">
@@ -45,6 +47,7 @@ const ContentGrade = () => {
           />
         </div>
       </div>
+      </Link>
     </div>
   );
 };

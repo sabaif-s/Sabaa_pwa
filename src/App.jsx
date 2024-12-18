@@ -23,8 +23,7 @@ import LandingPage from './components/landingPage/LandingPage';
         </Route>
         <Route path='/pdf' element={<PdfDownloads/> } >
         </Route>
-        <Route path='/landingPage' element={<LandingPage/> } >
-        </Route>
+         
         <Route path="/select" element={<HomePageELearn/>} >
 
         </Route>
