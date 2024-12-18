@@ -6,7 +6,7 @@ const  QuizQuestions = () => {
     const [correctOption,setCorrectOption]=useState('');
     const arr = Array.from({ length: 32 }, (_, i) => "SABAIF");
     const choices=['a','b','c','d'];
-    const optionsChoose=["1 CAPITAL","2 CAPITAL","3 CAPITAL","4 CAPITAL"]
+    const optionsChoose=["London","Paris","Ethiopia","Dubai"]
     const optionsArray=Array.from({length:4}, (_,i) => {
         return {
             choice:choices[i],
@@ -34,7 +34,7 @@ const  QuizQuestions = () => {
              <div className='w-full relative z-20 overflow-x-hidden flex flex-col' >
                 <div className='w-full bg-black p-2 text-white rounded-t-twelve flex justify-center items-center'>
                     <span className='w-full text-center word-break tracking-wider font-semibold text-xl' >
-                        How Many Officials Capitals Does South Africa Have
+                        What is Capital City Of Ethiopia?
                     </span>
                 </div>
                 <div className='w-full bg-white p-6 rounded-b-extraLarge flex justify-center items-center flex-col gap-y-4' >

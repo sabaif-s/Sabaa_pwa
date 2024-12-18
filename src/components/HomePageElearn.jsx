@@ -88,6 +88,8 @@ const HomePageELearn = () => {
         </Link>
 
         {/* Quizzes Section */}
+        <Link to="/quiz">
+       
         <div
           className={`transition-all transform ${
             slideDown < 3 ? "opacity-0 translate-y-10" : "opacity-100 translate-y-0"
@@ -101,6 +103,7 @@ const HomePageELearn = () => {
             Quizzes
           </div>
         </div>
+        </Link>
 
         {/* Downloadable PDFs */}
         <Link to="/pdf" >

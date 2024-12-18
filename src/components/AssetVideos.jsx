@@ -1,6 +1,6 @@
 import React,{useEffect,useState} from 'react';
-import firstVideo from '../assets/videos/firstVideo.MOV';
-import secondVideo from '../assets/videos/secondVideo.MOV';
+import firstVideo from '../assets/videos/education Free.m4a';
+import secondVideo from '../assets/videos/FreeEducation.m4a';
 const  AssetVideos = () => {
     const [videoAsset,setVideoAsset]=useState([]);
     const [filteredAsset,setFilteredAsset]=useState([]);
@@ -8,11 +8,11 @@ const  AssetVideos = () => {
     useEffect(()=>{
         const videoAssets=[
             {
-                uniqueName:"firstVideo",
+                uniqueName:"Coming Soon",
                 src:firstVideo
             },
             {
-                uniqueName:"secondVideo",
+                uniqueName:"Coming Soon 2",
                 src:secondVideo
             },
          ]
