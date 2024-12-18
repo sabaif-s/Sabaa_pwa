@@ -124,7 +124,7 @@ const PDFViewer = ({ pdfBlob, handlingBack }) => {
 
   return (
     <div
-     ref={containerRef}
+    
     className="relative z-30 w-full h-full bg-gray-50 flex flex-col items-center justify-center overflow-auto border border-gray-300 rounded-md shadow-lg p-4">
       {loading ? (
         <div className="flex justify-center items-center">
@@ -133,12 +133,15 @@ const PDFViewer = ({ pdfBlob, handlingBack }) => {
       ) : (
         <>
           <div
-           
+            ref={containerRef}
             id="pdf-container"
             className="relative w-full h-2/3 flex items-center justify-center bg-red-100 overflow-auto"
             style={{ maxHeight: "100vh" }}
           ></div>
-          <div className="flex flex-wrap gap-y-4 justify-between w-full mt-4">
+         
+        </>
+      )}
+       <div className="flex flex-wrap gap-y-4 justify-between w-full mt-4">
             <button
               onClick={goToPreviousPage}
               className="basis-1/3 text-white rounded-md"
@@ -169,8 +172,6 @@ const PDFViewer = ({ pdfBlob, handlingBack }) => {
               </span>
             </button>
           </div>
-        </>
-      )}
     </div>
   );
 };
