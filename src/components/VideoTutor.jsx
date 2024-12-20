@@ -23,12 +23,7 @@ const  VideoTutor = () => {
     const [downLoadLink,setDownLoadLink]=useState("");
     const [downloadingVideo,setDownLoadingVideo]=useState("");
     const [downloadedList,setDownLoadedList]=useState([]);
-    const [showRight,setShowRight]=useState(false);
-    const [showDownload,setShowDownload]=useState(true);
-    const [hidePause,setHidePause]=useState(true);
-    const [hideDownload,setHideDownload]=useState(false);
-    const [hideRight,setHideRight]=useState(true);
-    const [showPause,setShowPause]=useState(false);
+  
     const [currentVideo,setCurrentVideo]=useState(9999);
     const [clickedButton,setClickedButton]=useState("");
     const [downloadedLinks,setDownloadedLinks]=useState([]);
@@ -89,7 +84,14 @@ const  VideoTutor = () => {
         };
     
         // Load the blob as video source
-        video.src = blob;
+        try{
+          video.src = blob;
+        }
+        catch(err){
+          console.log("in getting metadata error");
+
+        }
+        
          
       });
     }
@@ -112,7 +114,14 @@ const  VideoTutor = () => {
           );
           allVideos
           .then((durations) => {
-            setDurations(durations);
+            if(durations.includes("Error getting duration")){
+              console.log("error in getting metadata");
+            }
+            else{
+              setDurations(durations);
+            }
+            
+            
             console.log("All video durations:", durations); // Array of durations
           })
           .catch((err) => {
