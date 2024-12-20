@@ -18,7 +18,7 @@ const  QuizQuestions = () => {
  
 
     return (
-        <div className='w-full h-screen flex justify-center items-center px-12 bg-opacity-100 bg-gradient-to-bl from-pink-500 via-purple-500 to-yellow-500'
+        <div className='w-full h-screen flex justify-center items-center md:px-20 lg:px-48 xl:px-56  px-6 bg-opacity-100 bg-gradient-to-bl from-pink-500 via-purple-500 to-yellow-500'
          >
             <div className='w-full h-full overflow-hidden absolute flex items-start justify-start flex-wrap top-0 z-0 left-0' >
                 {
@@ -31,7 +31,7 @@ const  QuizQuestions = () => {
                      
                       
             </div>
-             <div className='w-full relative z-20 overflow-x-hidden flex flex-col' >
+             <div className='w-full xl:w-1/3 relative z-20 overflow-x-hidden flex flex-col' >
                 <div className='w-full bg-black p-2 text-white rounded-t-twelve flex justify-center items-center'>
                     <span className='w-full text-center word-break tracking-wider font-semibold text-xl' >
                         What is Capital City Of Ethiopia?

@@ -72,11 +72,11 @@ const  LandingPage = () => {
       },[animateIn]);
 
     return (
-        <div className={` ${imageLoaded ? "animate-fadeIn":"opacity-0"} w-full min-h-screen bg-gradient-to-b from-blue-400 to-gray-300 relative`} >
+        <div className={` ${imageLoaded ? "animate-fadeIn":"opacity-0"} lg:px-64 lg:flex lg:justify-center h-screen w-full  bg-gradient-to-b from-blue-400 to-gray-300 relative`} >
                     <img onLoad={()=>{
                         setImageLoaded(true);
-                    }} src="/rb_68784_11zon.jpg" className={` ${animateInImage ? "animate-slideLeft":"opacity-0"} w-full  absolute bottom-10`} alt="" />
-                    <div className={`w-1/2 absolute left-0 h-full flex flex-col justify-center items-end pr-10 ${animateInButton ? "animate-fadeIn":"opacity-0"} `} >
+                    }} src="/rb_68784_11zon.jpg" className={` ${animateInImage ? "animate-slideLeft":"opacity-0"} w-full lg:w-1/2   absolute bottom-10`} alt="" />
+                    <div className={`w-1/2 lg:flex lg:justify-center  absolute left-0 h-full flex flex-col justify-center items-end pr-10 ${animateInButton ? "animate-fadeIn":"opacity-0"} `} >
                     <Link to="/content" >
                    
                     <button className="px-6 py-3 font-semibold text-white rounded-lg bg-gradient-to-r from-blue-500 via-teal-500 to-indigo-500 
@@ -89,7 +89,7 @@ const  LandingPage = () => {
     </Link>
                             
                     </div>
-                    <div className={` ${animateInDescription ? "animate-fadeIn":"opacity-0"} w-full overflow-x-hidden h-1/2 absolute z-20 py-10 px-4 flex flex-col justify-start items-center gap-y-4`}>
+                    <div className={` ${animateInDescription ? "animate-fadeIn":"opacity-0"} w-full lg:w-1/2 overflow-x-hidden h-1/2 absolute z-20 py-10 px-4 flex flex-col justify-start items-center gap-y-4`}>
     {/* Text Section */}
     <div className="w-full min-h-1/2 absolute bottom-40 bg-gradient-to-r from-blue-600 via-gray-500 to-indigo-600 px-4 py-2 rounded-lg shadow-lg text-center">
     <p className={` ${clickedButton == "" ? "animate-fadeIn":""} ${hideTop ? "hidden":""} text-white text-lg font-semibold`}>

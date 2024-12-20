@@ -430,8 +430,8 @@ console.log(finishedPdf);
                    {
                     readyRender && (
                       <div className={` ${showPdfViewer ? "hidden":""} ${fadeInContent ? "animate-fadeIn":"opacity-0"} w-full h-full p-4 relative z-30`} >
-                      <div className='w-full h-full overflow-y-auto bg-black bg-opacity-50 flex flex-col justify-start items-center pt-6' >
-                                <div className='w-full bg-gradient-to-r from-gray-300 to-gray-500 flex flex-wrap justify-between items-center' >
+                      <div className='w-full h-full overflow-y-auto lg:px-24 bg-black bg-opacity-50 flex flex-col justify-start items-center pt-6' >
+                                <div className='w-full  bg-gradient-to-r from-gray-300 to-gray-500 flex flex-wrap justify-between items-center' >
                                     {
                                        assetPdf.length >0 && assetPdf.map((item,index)=>(
                                             <div

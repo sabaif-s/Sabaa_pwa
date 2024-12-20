@@ -743,13 +743,13 @@ const  VideoTutor = () => {
         <>
             {
               true && (
-                <div className='w-full animate-fadeIn min-h-screen flex flex-col justify-start items-center bg-gradient-to-t from-gray-300 to-gray-400 pt-4' >
-                <div className='w-full p-4 flex justify-center items-center bg-white text-gray-400 mb-6' >
+                <div className='w-full animate-fadeIn min-h-screen lg:px-40 lg:py-10 flex flex-col justify-start items-center bg-gradient-to-t from-gray-300 via-purple-300 to-gray-400 pt-4' >
+                <div className='w-full lg:w-2/3 p-4 flex justify-center items-center bg-white text-gray-400 mb-6' >
                  <h1 className='text-3xl font-semibold' >
                      Videos
                  </h1>
                 </div>
-                <div className='w-full relative bg-blue-300 flex justify-between items-center' >
+                <div className='w-full lg:w-2/3 relative bg-blue-300 flex justify-between items-center' >
                  <div className='absolute z-10 inset-0 flex justify-center items-center' >
                           <div className='w-2 h-full bg-red-400' >
 

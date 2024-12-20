@@ -129,7 +129,7 @@ const  DownloadedVideo = ({reload}) => {
         <>
         {
             renderComponent && (
-                <div className='mt-4 w-full h-auto py-4 bg-white flex flex-col gap-y-4 justify-start items-center' >
+                <div className='mt-4 w-full lg:w-2/3 h-auto py-4 bg-white flex flex-col gap-y-4 justify-start items-center' >
                   { 
                       
                   downloadedVideos.map((video,index)=>(
