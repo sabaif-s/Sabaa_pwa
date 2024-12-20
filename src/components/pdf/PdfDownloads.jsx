@@ -17,6 +17,7 @@ const  PdfDownloads = () => {
     const {assetPdf,failedPdf}=AssetPdf();
     const [failedDownload,setFailedDownload]=useState(0);
     const [showFailure,setShowFailure]=useState(false);
+    const [imageLoadedError,setImageLoadedError]=useState(false);
     const pdfArray=Array.from({length:12},(_,i)=> i);
 
     useEffect(()=>{
@@ -69,6 +70,12 @@ const  PdfDownloads = () => {
     useEffect(()=>{
 console.log(finishedPdf);
     },[finishedPdf])
+
+    useEffect(()=>{
+           if(imageLoadedError){
+            console.log("image loaded error");
+           }
+    },[imageLoadedError]);
     useEffect(()=>{
         async function initDB() {
             return openDB("pdfChunk", 1, {
@@ -416,15 +423,36 @@ console.log(finishedPdf);
            </div>
             )
           }
+          {
+            imageLoadedError && (
+              <div className='absolute z-50 inset-0 flex justify-center items-center' >
+                <div className=' w-full relative overflow-x-hidden flex justify-center items-center' >
+                <img src="alarmNotify.jpg" className='w-full h-64' alt="" />
+                <div className=' flex absolute pl-8 pt-8 justify-center items-center inset-x-24 inset-y-14 z-10' >
+                <span className="text-red-600 w-full overflow-x-hidden word-break font-bold text-sm md:text-xl rounded-md shadow-md text-center">
+        YOU need To Connect To Internet To Download Pdf
+      </span>
+                </div>
+                </div>
+             
+           </div>
+            )
+          }
           
                <img
                onLoad={()=>{
                 setFirstLoaded(true);
                }}
+               onError={()=>{
+                setImageLoadedError(true);
+               }}
                src="pdfDownload.jpg" className={` ${firstLoaded ? "":"opacity-0"} w-full h-full absolute z-10`} alt="" />
                <img 
                  onLoad={()=>{
                     setSecondLoaded(true);
+                   }}
+                   onError={()=>{
+                    setImageLoadedError(true);
                    }}
                src="pdfDownloads.jpg" className={` ${secondLoaded && firstLoaded ? "animate-fadeIn":"opacity-0"} w-full h-full absolute z-20`} alt="" />
                    {
