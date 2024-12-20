@@ -48,18 +48,12 @@ const  VideoTutor = () => {
     const [showPauses,setShowPauses]=useState([]);
     const [showRightsArray,setShowRightsArray]=useState([]);
     const [saveFullVideo,setSaveFullVideo]=useState(0);
+    const [sourceAsset,setSourceAsset]=useState([]);
+    const [durations,setDurations]=useState([]);
 
    
      
-    // useEffect(()=>{
-    //   if(videoAsset.length > 0){
-    //     console.log("asset videos:",videoAsset);
-    //     setRenderThisComponent(true);
-    //   }
-    //   else {
-    //     console.log("video Asset 0 no video");
-    //   }
-    // },[videoAsset]);
+    
     useEffect(()=>{
           console.log("download percentage list :",downloadPercentageList);
     },[downloadPercentageList]);
@@ -76,6 +70,56 @@ const  VideoTutor = () => {
             }
           }
    },[saveFullVideo]);
+
+   useEffect(()=>{
+    function getVideoDuration(blob) {
+      return new Promise((resolve, reject) => {
+        // Create a video element
+        const video = document.createElement("video");
+    
+        // Handle metadata loaded event
+        video.onloadedmetadata = () => {
+          // Resolve the duration in seconds
+          resolve(video.duration);
+        };
+    
+        // Handle error case
+        video.onerror = (e) => {
+          reject("Error loading video metadata");
+        };
+    
+        // Load the blob as video source
+        video.src = blob;
+         
+      });
+    }
+  
+         if(sourceAsset.length > 0){
+          const allVideos = Promise.all(
+            sourceAsset.map((item) =>
+              getVideoDuration(item)
+                .then((duration) => {
+                  const minutes = Math.floor(duration / 60);
+                  const seconds = Math.floor(duration % 60);
+                  console.log(`Video Duration: ${duration} seconds`);
+                  return `${minutes}:${seconds}`; // Return formatted duration
+                })
+                .catch((error) => {
+                  console.error("Error: ", error);
+                  return "Error getting duration"; // Handle errors gracefully
+                })
+            )
+          );
+          allVideos
+          .then((durations) => {
+            setDurations(durations);
+            console.log("All video durations:", durations); // Array of durations
+          })
+          .catch((err) => {
+            console.error("Error processing videos:", err);
+          });
+         }
+   },[sourceAsset]);
 
    const savingVideoToFull= async (saveVideos)=>{
     try {
@@ -249,34 +293,6 @@ const  VideoTutor = () => {
        console.log("deleted video:",deleteChunks);
        const updateLocalStorageForFinishedVideo=await updateLocalFinished(deleteChunks);
        console.log("updated local for finished",updateLocalStorageForFinishedVideo);
-    //     console.log("url blob: ",urlBlob);
-    //   console.log('Matching records:', results);
-      // const saveRecord={
-      //   url:urlBlob,
-      //   uniqueName:saveVideos[0],
-      //   blobFILE:newBlob
-      // }
-     
-      // return results;
-       
-    //  const deleteTransaction = dbChunk.transaction('videoChunks', 'readwrite');
-    // const deleteStore = deleteTransaction.store;
-    // let deleteCursor = await deleteStore.openCursor();
-
-    // while (deleteCursor) {
-    //   const record = deleteCursor.value;
-
-    //   if (record["identifier"] === saveVideos[0]) {
-    //     console.log(`Deleting record with ID ${record.id} matching identifier=${saveVideos[0]}`);
-    //     await deleteCursor.delete(); // Delete the current record
-    //   }
-
-    //   deleteCursor = await deleteCursor.continue();
-    // }
-
-    // await deleteTransaction.done;
-    // console.log("Chunks deleted successfully.");
-
     }
     catch (err){
           console.log(err);
@@ -287,6 +303,9 @@ const  VideoTutor = () => {
          if(successSend){
           if(filteredAsset.length > 0){
             console.log("UnDownloaded video:",filteredAsset);
+            const srcAsset=filteredAsset.map((item)=> item.src);
+            console.log("source asset:",srcAsset);
+            setSourceAsset(srcAsset);
             setRenderThisComponent(true);
            }
            else{
@@ -810,9 +829,9 @@ className="w-1/2 h-full flex justify-center items-center overflow-x-hidden">
 
 <div className="w-1/2 h-full flex justify-center items-center">
  <span className="text-2xl text-blue-500 font-semibold hover:text-blue-400 transition-colors duration-300">
-   12
+ {durations && durations[index] && durations[index].split(":")[0]}
    <span className="text-red-400 font-bold">:</span>
-   <span className="text-yellow-600">24</span>
+   <span className="text-yellow-600"> {durations && durations[index] && durations[index].split(":")[1]}</span>
  </span>
 </div>
 
