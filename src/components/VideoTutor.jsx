@@ -3,7 +3,7 @@ import { openDB } from 'idb';
  
 import DownloadedVideo from './Downloaded';
 import AssetVideos from './AssetVideos';
-import { use } from 'react';
+ import ScreenSize from '../hooks/ScreenSize';
 import AllVideosDownLoaded from './AllVideosDownLoaded';
 const  VideoTutor = () => {
     const [activeButton,setActiveButton]=useState(0);
@@ -18,7 +18,7 @@ const  VideoTutor = () => {
     const [pauseFirst,setPauseFirst]=useState(99999);
     const [downloadInProgressFirst,setDownloadInProgressFirst]=useState(false);
     const [startDownloadFirstVideo,setStartDownloadFirstVideo]=useState(false);
-    const [fullyDownloadedFirst,setFullyDownloadedFirst]=useState("new");
+    
     const [renderThisComponent,setRenderThisComponent]=useState(false);
     const [downLoadLink,setDownLoadLink]=useState("");
     const [downloadingVideo,setDownLoadingVideo]=useState("");
@@ -33,7 +33,7 @@ const  VideoTutor = () => {
     const [pausingVideo,setPausingVideo]=useState(99999);
     const [resumeDownLoad,setResumeDownLoad]=useState(0);
     const [pausedCurrent,setPausedCurrent]=useState("");
-    const [downloadingVideoData,setDownLoadingVideoData]=[{}];
+     
     const [currentDownloadingVideoLists,setCurrentDownloadingVideoLists]=useState([]);
     const [downloadPercentageList,setDownloadPercentageList]=useState([]);
     const [currentUrlDownloadingLists,setCurrentUrlDownloadingLists]=useState([]);
@@ -45,6 +45,7 @@ const  VideoTutor = () => {
     const [saveFullVideo,setSaveFullVideo]=useState(0);
     const [sourceAsset,setSourceAsset]=useState([]);
     const [durations,setDurations]=useState([]);
+    const {isDesktop,isDesktopLarge,isTablet,isMobile}=ScreenSize();
 
    
      
@@ -771,7 +772,7 @@ const  VideoTutor = () => {
         <>
             {
               true && (
-                <div className='w-full animate-fadeIn min-h-screen lg:px-40 lg:py-10 flex flex-col justify-start items-center bg-gradient-to-t from-gray-300 via-purple-300 to-gray-400 pt-4' >
+                <div className='w-full animate-fadeIn min-h-screen px-2 sm:px-20 lg:px-40 lg:py-10 flex flex-col justify-start items-center bg-gradient-to-t from-sky-800 via-sky-800 to-sky-400 pt-4' >
                 <div className='w-full lg:w-2/3 p-4 flex justify-center items-center bg-white text-gray-400 mb-6' >
                  <h1 className='text-3xl font-semibold' >
                      Videos
@@ -805,7 +806,7 @@ Your Videos
                 </div>
                 {
                  activeButton == 0 && !showAllVideosDownLoaded && (
-                   <div className='mt-4 w-full h-auto py-4 bg-white flex flex-col gap-y-4 justify-start items-center' >
+                   <div className={` ${isDesktop ? "justify-center gap-y-12":"justify-start gap-y-4"} mt-4 w-full lg:w-2/3 h-auto py-4 bg-white flex flex-col items-center`} >
                      {
                         filteredAsset.map((asset,index)=>(
                           <React.Fragment key={asset.uniqueName}>

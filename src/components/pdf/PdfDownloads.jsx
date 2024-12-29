@@ -2,6 +2,7 @@ import React,{useEffect,useState} from 'react';
 import AssetPdf from './AssetPdf';
 import { openDB } from 'idb';
 import PDFViewer from './PdfReader';
+import ScreenSize from '../../hooks/ScreenSize';
 import { use } from 'react';
 const  PdfDownloads = () => {
     const [firstLoaded,setFirstLoaded]=useState(false);
@@ -18,6 +19,7 @@ const  PdfDownloads = () => {
     const [failedDownload,setFailedDownload]=useState(0);
     const [showFailure,setShowFailure]=useState(false);
     const [imageLoadedError,setImageLoadedError]=useState(false);
+    const {isMobile}=ScreenSize();
     const pdfArray=Array.from({length:12},(_,i)=> i);
 
     useEffect(()=>{
@@ -438,27 +440,62 @@ console.log(finishedPdf);
            </div>
             )
           }
-          
-               <img
-               onLoad={()=>{
-                setFirstLoaded(true);
-               }}
-               onError={()=>{
-                setImageLoadedError(true);
-               }}
-               src="pdfDownload.jpg" className={` ${firstLoaded ? "":"opacity-0"} w-full h-full absolute z-10`} alt="" />
-               <img 
-                 onLoad={()=>{
-                    setSecondLoaded(true);
-                   }}
-                   onError={()=>{
-                    setImageLoadedError(true);
-                   }}
-               src="pdfDownloads.jpg" className={` ${secondLoaded && firstLoaded ? "animate-fadeIn":"opacity-0"} w-full h-full absolute z-20`} alt="" />
+                  {
+                    isMobile && (
+                      <img
+                      onLoad={()=>{
+                       setFirstLoaded(true);
+                      }}
+                      onError={()=>{
+                       setImageLoadedError(true);
+                      }}
+                      src="pdfDownload.jpg" className={` ${firstLoaded ? "":"opacity-0"} w-full h-full absolute z-10`} alt="" />
+                    )
+                  }
+
+               {
+                !isMobile && (
+                  <img
+                  onLoad={()=>{
+                   setFirstLoaded(true);
+                  }}
+                  onError={()=>{
+                   setImageLoadedError(true);
+                  }}
+                  src="pdfDesk2.jpg" className={` ${firstLoaded ? "":"opacity-0"} w-full h-full absolute z-10`} alt="" />
+                )
+               }
+               {
+                !isMobile && (
+                  <img 
+                  onLoad={()=>{
+                     setSecondLoaded(true);
+                    }}
+                    onError={()=>{
+                     setImageLoadedError(true);
+                    }}
+                src="pdfDesk.jpg" className={` ${secondLoaded && firstLoaded ? "animate-fadeIn":"opacity-0"} w-full h-full absolute z-20`} alt="" />
+                )
+               }
+                                  
+                          {
+                            isMobile && (
+                              <img 
+                              onLoad={()=>{
+                                 setSecondLoaded(true);
+                                }}
+                                onError={()=>{
+                                 setImageLoadedError(true);
+                                }}
+                            src="pdfDownloads.jpg" className={` ${secondLoaded && firstLoaded ? "animate-fadeIn":"opacity-0"} w-full h-full absolute z-20`} alt="" />
+                            )
+                          }         
+                   
+
                    {
                     readyRender && (
-                      <div className={` ${showPdfViewer ? "hidden":""} ${fadeInContent ? "animate-fadeIn":"opacity-0"} w-full h-full p-4 relative z-30`} >
-                      <div className='w-full h-full overflow-y-auto lg:px-24 bg-black bg-opacity-50 flex flex-col justify-start items-center pt-6' >
+                      <div className={` ${showPdfViewer ? "hidden":""} ${fadeInContent ? "animate-fadeIn":"opacity-0"} w-full md:px-20 lg:px-40 h-full p-4 relative z-30`} >
+                      <div className='w-full h-full overflow-y-auto lg:px-4 bg-black bg-opacity-50 flex flex-col justify-start items-center pt-6' >
                                 <div className='w-full  bg-gradient-to-r from-gray-300 to-gray-500 flex flex-wrap justify-between items-center' >
                                     {
                                        assetPdf.length >0 && assetPdf.map((item,index)=>(
