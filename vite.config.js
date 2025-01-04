@@ -41,7 +41,7 @@ export default defineConfig({
         skipWaiting: true, // Removes outdated caches
       },
        // Register the service worker with auto update
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg','vite.svg','alarmNotify.jpg','rb_68784_11zon.jpg','sabk.jpeg'], // Include assets like icons
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg','download.png','vite.svg','alarmNotify.jpg','rb_68784_11zon.jpg','sabk.jpeg'], // Include assets like icons
       manifest: {
         name: 'Vite PWA Project',
         short_name: 'Vite PWA Project',
