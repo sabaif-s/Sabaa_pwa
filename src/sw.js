@@ -31,7 +31,7 @@ self.addEventListener('fetch', (event) => {
 registerRoute(
   ({ request }) => request.destination === 'image', // Match all image requests
   new CacheFirst({
-    cacheName: 'image-cache-v3', // Custom cache name for all images
+    cacheName: 'image-cache-v4', // Custom cache name for all images
     plugins: [
       new CacheableResponsePlugin({
         statuses: [0, 200], // Cache responses with status 0 or 200
@@ -43,7 +43,7 @@ registerRoute(
   // Match all navigation requests
   ({ request }) => request.mode === 'navigate' || request.destination === 'document',
   new NetworkFirst({
-    cacheName: 'react-pages-v3', // Name of the cache
+    cacheName: 'react-pages-v4', // Name of the cache
     plugins: [
       {
         cacheWillUpdate: async ({ response }) => {
@@ -72,7 +72,7 @@ setCatchHandler(async ({ event }) => {
   }
 });
 self.addEventListener('activate', (event) => {
-  const cacheWhitelist = ['image-cache-v3','react-pages-v3']; // Your custom cache name
+  const cacheWhitelist = ['image-cache-v4','react-pages-v4']; // Your custom cache name
 
   event.waitUntil(
     caches.keys().then((cacheNames) => {
