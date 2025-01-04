@@ -529,7 +529,7 @@ console.log(finishedPdf);
                    }
                    {
                     showPdfViewer && (
-                      <PDFViewer pdfBlob={fileBlob} handlingBack={handleBack} />
+                      <PDFViewer key={"viewer"} pdfBlob={fileBlob} handlingBack={handleBack} />
                     )
                    }
             

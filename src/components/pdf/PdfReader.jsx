@@ -4,14 +4,14 @@ import ScreenSize from "../../hooks/ScreenSize";
 
 // Configure PDF.js worker
 
-const PDFViewer = ({ pdfBlob, handlingBack }) => {
+const PDFViewer = React.memo(({ pdfBlob, handlingBack }) => {
   const containerRef = useRef(null);
   const [pdf, setPdf] = useState(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [numPages, setNumPages] = useState(null);
   const [loading, setLoading] = useState(true);
   const [renderingPage, setRenderingPage] = useState(false);
-  const {isMobile}=ScreenSize();
+  const { isMobile } = ScreenSize();
 
   useEffect(() => {
     const loadPDF = async () => {
@@ -30,19 +30,8 @@ const PDFViewer = ({ pdfBlob, handlingBack }) => {
           url: pdfUrl, // 64 KB chunks
         });
         const pdfDoc = await loadingTask.promise;
-        const pageFirst = await pdfDoc.getPage(1);
-        const viewport = pageFirst.getViewport({ scale: 1.0 });
-
-        console.log(`Width: ${viewport.width}, Height: ${viewport.height}`);
-        console.log(pageFirst);
         setPdf(pdfDoc);
         setNumPages(pdfDoc.numPages);
-        console.log(pdfDoc);
-        console.log(loadingTask);
-        console.log(pdfDoc.numPages);
-
-        // Render the first page
-        renderPage(pdfDoc, 1);
       } catch (error) {
         console.error("Error loading PDF:", error);
         if (containerRef.current) {
@@ -55,17 +44,24 @@ const PDFViewer = ({ pdfBlob, handlingBack }) => {
       }
     };
 
-    loadPDF();
+    if (pdfBlob != null) {
+      loadPDF();
+    }
   }, [pdfBlob]);
 
+  useEffect(() => {
+    if (pdf) {
+      renderPage(pdf, 1);
+    }
+  }, [pdf]);
+
   const renderPage = async (pdfDoc, pageNum) => {
-    if (!pdfDoc || renderingPage) return;
+    if (!pdfDoc || !containerRef.current) return;
 
     try {
       setRenderingPage(true);
 
       const page = await pdfDoc.getPage(pageNum);
-      console.log("page dimension:", page.getViewport({ scale: 1 }));
       const { width, height } = page.getViewport({ scale: 1 });
       let ratio;
       let high;
@@ -78,8 +74,6 @@ const PDFViewer = ({ pdfBlob, handlingBack }) => {
       }
       const scale = calculateScale(ratio, high); // Dynamic scaling based on container size
       const viewport = page.getViewport({ scale });
-      console.log("scale:", scale);
-      console.log("view port:", viewport);
       const canvas = document.createElement("canvas");
       containerRef.current.innerHTML = ""; // Clear the container before rendering
       containerRef.current.appendChild(canvas);
@@ -97,7 +91,6 @@ const PDFViewer = ({ pdfBlob, handlingBack }) => {
       await page.render(renderContext).promise;
     } catch (error) {
       console.error(`Error rendering page ${pageNum}:`, error);
-        
     } finally {
       setRenderingPage(false);
     }
@@ -107,10 +100,7 @@ const PDFViewer = ({ pdfBlob, handlingBack }) => {
     if (containerRef.current != null) {
       const containerWidth = containerRef.current.offsetWidth;
       const containerHeight = containerRef.current.offsetHeight;
-      console.log(containerHeight, containerWidth);
-      console.log(window.innerWidth);
       const isMobile = window.innerWidth < 500 ? true : false;
-      console.log(isMobile);
       const pageAspectRatio = ratio; // Adjust aspect ratio based on PDF content
       if (high == "width") {
         return Math.min(
@@ -118,7 +108,11 @@ const PDFViewer = ({ pdfBlob, handlingBack }) => {
           containerHeight / 900
         );
       } else if (high == "height" && isMobile) {
-        return Math.min(1, containerWidth / (pageAspectRatio * 360), containerHeight / (pageAspectRatio * 300));
+        return Math.min(
+          1,
+          containerWidth / (pageAspectRatio * 360),
+          containerHeight / (pageAspectRatio * 300)
+        );
       } else if (high == "height" && !isMobile) {
         return Math.min(
           1,
@@ -150,27 +144,27 @@ const PDFViewer = ({ pdfBlob, handlingBack }) => {
     }
   };
 
-  const backHandling = () => {
-    handlingBack();
-  };
-
   return (
-    <div className={`relative z-30 w-full h-full bg-gray-50 flex flex-col items-center justify-center overflow-auto border border-gray-300 rounded-md shadow-lg ${isMobile ? "p-2":"p-4"} `}>
+    <div
+      className={`relative z-30 w-full h-full bg-gray-50 flex flex-col items-center justify-center overflow-auto border border-gray-300 rounded-md shadow-lg ${
+        isMobile ? "p-2" : "p-4"
+      } `}
+    >
       {loading ? (
         <div className="flex justify-center items-center">
           <span className="text-xl text-gray-600">Loading PDF...</span>
         </div>
       ) : (
         <>
-        <div className={`w-full h-full ${isMobile ? "p-0":"p-4"} bg-red-100`} >
-
-        
           <div
-            ref={containerRef}
-            id="pdf-container"
-            className="relative w-full h-full flex items-center justify-center overflow-auto"
-            style={{ maxHeight: "100vh" }}
-          ></div>
+            className={`w-full h-full ${isMobile ? "p-0" : "p-4"} bg-red-100`}
+          >
+            <div
+              ref={containerRef}
+              id="pdf-container"
+              className="relative w-full h-full flex items-center justify-center overflow-auto"
+              style={{ maxHeight: "100vh" }}
+            ></div>
           </div>
         </>
       )}
@@ -197,7 +191,9 @@ const PDFViewer = ({ pdfBlob, handlingBack }) => {
           </span>
         </button>
         <button
-          onClick={backHandling}
+          onClick={() => {
+            handlingBack();
+          }}
           className="basis-2/3 flex justify-end"
         >
           <span className="px-4 py-2 bg-blue-500 rounded-md text-white hover:bg-blue-600">
@@ -207,6 +203,6 @@ const PDFViewer = ({ pdfBlob, handlingBack }) => {
       </div>
     </div>
   );
-};
+});
 
 export default PDFViewer;
