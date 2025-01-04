@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import ScreenSize from '../hooks/ScreenSize';
+import BackButton from './BackButton';
 
 const ContentGrade = () => {
   const { isDesktop,isDesktopLarge,isTablet } = ScreenSize();
@@ -12,6 +13,9 @@ const ContentGrade = () => {
           CONTENT
         </h1>
       </div>
+      <div className='fixed top-12 right-8  z-50' >
+                              <BackButton/>
+          </div>
 
       {/* Content */}
       <Link to="/select">

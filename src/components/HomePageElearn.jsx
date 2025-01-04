@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import BackButton from "./BackButton";
 import ScreenSize from "../hooks/ScreenSize";
 
 const HomePageELearn = () => {
@@ -79,6 +80,9 @@ const HomePageELearn = () => {
             Interactive Lessons
           </div>
         </div>
+        <div className='fixed top-12 right-8  z-50' >
+                              <BackButton/>
+          </div>
 
         {/* Video Tutorials */}
         <Link to="/videoTutor">

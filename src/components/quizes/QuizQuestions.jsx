@@ -1,12 +1,15 @@
 import React,{useState,useEffect} from 'react';
+ 
+import BackButton from '../BackButton';
 
 const  QuizQuestions = () => {
     const [clickedOption,setClickedOption]=useState(9999);
+     
     const [chooseOption,setChooseOption]=useState("");
     const [correctOption,setCorrectOption]=useState('');
     const arr = Array.from({ length: 32 }, (_, i) => "SABAIF");
     const choices=['a','b','c','d'];
-    const optionsChoose=["London","Paris","Ethiopia","Dubai"]
+    const optionsChoose=["London","Paris","Addis Abeba","Ankara"]
     const optionsArray=Array.from({length:4}, (_,i) => {
         return {
             choice:choices[i],
@@ -84,6 +87,8 @@ const  QuizQuestions = () => {
                    <img src="next.png" className={` ${chooseOption ? "animate-slideNext":""} w-full h-full`} alt="" />
                  </div>
              </div>
+             <BackButton/>
+             
              </div>
              
         </div>

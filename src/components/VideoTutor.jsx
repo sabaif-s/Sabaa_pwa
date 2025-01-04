@@ -5,6 +5,7 @@ import DownloadedVideo from './Downloaded';
 import AssetVideos from './AssetVideos';
  import ScreenSize from '../hooks/ScreenSize';
 import AllVideosDownLoaded from './AllVideosDownLoaded';
+import BackButton from './BackButton';
 const  VideoTutor = () => {
     const [activeButton,setActiveButton]=useState(0);
     const {videoAsset,filteredAsset,successSend}=AssetVideos();
@@ -770,15 +771,18 @@ const  VideoTutor = () => {
   
     return (
         <>
+          <div className='fixed top-12 right-8  z-50' >
+                              <BackButton/>
+          </div>
             {
               true && (
                 <div className='w-full animate-fadeIn min-h-screen px-2 sm:px-20 lg:px-40 lg:py-10 flex flex-col justify-start items-center bg-gradient-to-t from-sky-800 via-sky-800 to-sky-400 pt-4' >
-                <div className='w-full lg:w-2/3 p-4 flex justify-center items-center bg-white text-gray-400 mb-6' >
+                <div className='w-full lg:w-2/3 p-4 cursor-pointer flex justify-center items-center bg-white text-gray-400 mb-6' >
                  <h1 className='text-3xl font-semibold' >
                      Videos
                  </h1>
                 </div>
-                <div className='w-full lg:w-2/3 relative bg-blue-300 flex justify-between items-center' >
+                <div className='w-full lg:w-2/3 cursor-pointer relative bg-blue-300 flex justify-between items-center' >
                  <div className='absolute z-10 inset-0 flex justify-center items-center' >
                           <div className='w-2 h-full bg-red-400' >
 
@@ -806,7 +810,7 @@ Your Videos
                 </div>
                 {
                  activeButton == 0 && !showAllVideosDownLoaded && (
-                   <div className={` ${isDesktop ? "justify-center gap-y-12":"justify-start gap-y-4"} mt-4 w-full lg:w-2/3 h-auto py-4 bg-white flex flex-col items-center`} >
+                   <div className={` ${isDesktop ? "justify-center gap-y-12":"justify-start gap-y-4"} cursor-pointer mt-4 w-full lg:w-2/3 h-auto py-4 bg-white flex flex-col items-center`} >
                      {
                         filteredAsset.map((asset,index)=>(
                           <React.Fragment key={asset.uniqueName}>
@@ -879,7 +883,7 @@ className="w-1/2 h-full flex justify-center items-center overflow-x-hidden">
   <>
     <div
      
-    className={` ${handleDownloadFirstVideo == index || showCurrentVideo == index || currentDownloadingVideoLists.includes(String(index)) ? "":"hidden"} w-full p-4 bg-white h-44`} >
+    className={` ${handleDownloadFirstVideo == index || showCurrentVideo == index || currentDownloadingVideoLists.includes(String(index)) ? "":"hidden"} w-full p-4 bg-white h-64`} >
          <video controls muted autoPlay onError={handleError} src={asset.src} className={` ${fetchedErrorVideoShow ? "hidden":""} w-full h-full`} ></video>
          <div className={` ${fetchedErrorVideoShow ? "":"hidden"} w-full h-full bg-gray-300 text-red-300 flex justify-center items-center`}>
                       <span className='text-blue-300 font-semibold' >YOU NEED TO CONNECT YOUR DEVICE TO INTERNET</span>

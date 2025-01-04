@@ -1,6 +1,6 @@
 import React,{useEffect,useState} from 'react';
 import {openDB} from "idb";
-import { use } from 'react';
+import ScreenSize from '../hooks/ScreenSize';
 const  DownloadedVideo = ({reload}) => {
     const [videoUrls,setVideoUrls]=useState("");
     const [renderComponent,setRenderComponent]=useState(false);
@@ -9,6 +9,7 @@ const  DownloadedVideo = ({reload}) => {
     const [noVideo,setNoVideo]=useState(false);
     const [currentShowVideo,setCurrentShowVideo]=useState(9999);
     const [durations,setDurations]=useState([]);
+    const {isDesktopLarge}=ScreenSize();
 
 
     useEffect(()=>{
@@ -129,14 +130,14 @@ const  DownloadedVideo = ({reload}) => {
         <>
         {
             renderComponent && (
-                <div className='mt-4 w-full lg:w-2/3 h-auto py-4 bg-white flex flex-col gap-y-4 justify-start items-center' >
+                <div className='mt-4 w-full lg:w-2/3 h-auto py-4 bg-white flex flex-col gap-y-4 justify-start items-end' >
                   { 
                       
                   downloadedVideos.map((video,index)=>(
                     <React.Fragment key={index}>
                          <div
                           
-                         className="w-full h-12 flex justify-between items-center p-2 bg-gradient-to-r from-green-500 to-green-300 hover:shadow-lg transition-shadow duration-300">
+                         className={` ${isDesktopLarge ? "w-1/2":"w-full"} h-12 flex cursor-pointer justify-between items-center p-2 bg-gradient-to-r from-green-500 to-green-300 hover:shadow-lg transition-shadow duration-300`}>
                  
                  <div 
                  onClick={()=>{
@@ -156,7 +157,7 @@ const  DownloadedVideo = ({reload}) => {
                  </div>
                  
                  
-                 <div className="w-1/2 h-full flex justify-center items-center">
+                 <div className="w-1/2 h-full flex justify-center items-center bg-gradient-to-r from-blue-400 to-gray-300">
                  
                  <div className="w-1/2 h-full flex justify-center items-center">
                  <span className="text-2xl text-blue-500 font-semibold hover:text-blue-400 transition-colors duration-300">
@@ -174,7 +175,7 @@ const  DownloadedVideo = ({reload}) => {
                  </div>
                  </div>
                  </div>
-                 <div className={`w-full ${currentShowVideo != index ? "hidden":""}  p-4 bg-white h-44`} >
+                 <div className={`w-full ${currentShowVideo != index ? "hidden":""}  p-4 flex justify-center bg-white h-96`} >
         <video controls muted autoPlay onError={handleError2} src={video} className={` w-full h-full`} ></video>
          
         </div>

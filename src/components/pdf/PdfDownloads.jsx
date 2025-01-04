@@ -3,7 +3,8 @@ import AssetPdf from './AssetPdf';
 import { openDB } from 'idb';
 import PDFViewer from './PdfReader';
 import ScreenSize from '../../hooks/ScreenSize';
-import { use } from 'react';
+import BackButton from '../BackButton';
+
 const  PdfDownloads = () => {
     const [firstLoaded,setFirstLoaded]=useState(false);
     const [secondLoaded,setSecondLoaded]=useState(false);
@@ -523,10 +524,14 @@ console.log(finishedPdf);
                                    
                                 </div>
                       </div>
+                      <div className='fixed top-12 right-8  z-50' >
+                              <BackButton/>
+          </div>
                </div>
                 
                     )
                    }
+                
                    {
                     showPdfViewer && (
                       <PDFViewer key={"viewer"} pdfBlob={fileBlob} handlingBack={handleBack} />
