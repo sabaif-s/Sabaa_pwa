@@ -414,8 +414,8 @@ console.log(finishedPdf);
           {
             showFailure && (
               <div className='absolute z-50 inset-0 flex justify-center items-center' >
-                <div className=' w-full relative overflow-x-hidden flex justify-center items-center' >
-                <img src="alarmNotify.jpg" className='w-full h-64' alt="" />
+                <div className=' w-1/4 relative overflow-x-hidden flex justify-center items-center' >
+                <img src="alarmNotify.jpg" className='w-1/4 h-64' alt="" />
                 <div className=' flex absolute pl-8 pt-8 justify-center items-center inset-x-24 inset-y-14 z-10' >
                 <span className="text-red-600 w-full overflow-x-hidden word-break font-bold text-sm md:text-xl rounded-md shadow-md text-center">
         YOU need To Connect To Internet To Download
