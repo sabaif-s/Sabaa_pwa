@@ -1,49 +1,59 @@
 import { precacheAndRoute } from 'workbox-precaching';
-import { registerRoute,setCatchHandler } from 'workbox-routing';
-import { CacheFirst,NetworkFirst } from 'workbox-strategies'; // CacheFirst strategy for images
+import { registerRoute, setCatchHandler } from 'workbox-routing';
+import { CacheFirst, NetworkFirst } from 'workbox-strategies';
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
 
-// self.__WB_MANIFEST is the default injection point for precaching in Workbox
- 
+// Precaching assets with Workbox
 const routesToCache = self.__WB_MANIFEST.concat([
-  { url: '/', revision: null },      // Root route
-  { url: '/content', revision: null }, // About page
-  { url: '/select', revision: null },
-  { url: '/pdf', revision: null },
-  { url: '/videoTutor', revision: null },
-  { url: '/quiz', revision: null },
-  // Contact page
+  { url: '/', revision: 'v.4' },
+  { url: '/content', revision: 'v.4' },
+  { url: '/select', revision: 'v.4' },
+  { url: '/pdf', revision: 'v.4' },
+  { url: '/videoTutor', revision: 'v.4' },
+  { url: '/quiz', revision: 'v.4'},
 ]);
 
 precacheAndRoute(routesToCache);
- 
+
+// Message listener for "SKIP_WAITING"
 self.addEventListener('message', (event) => {
-  if (event.data && event.data.action === 'skipWaiting') {
+  if (event.data && event.data.action === 'SKIP_WAITING') {
     self.skipWaiting();
   }
 });
+
+// Log fetch requests (for debugging)
 self.addEventListener('fetch', (event) => {
   console.log('Fetching:', event.request.url);
 });
 
-
-// Cache all image files (e.g., .svg, .png, .jpg, .jpeg, .gif, etc.)
+// Cache scripts and styles with NetworkFirst strategy
 registerRoute(
-  ({ request }) => request.destination === 'image', // Match all image requests
+  ({ request }) => request.destination === 'script' || request.destination === 'style',
+  new NetworkFirst({
+    cacheName: 'static-assets4',
+    networkTimeoutSeconds: 10,
+  })
+);
+
+// Cache images with CacheFirst strategy
+registerRoute(
+  ({ request }) => request.destination === 'image',
   new CacheFirst({
-    cacheName: 'image-cache-v4', // Custom cache name for all images
+    cacheName: 'image-cache-v4',
     plugins: [
       new CacheableResponsePlugin({
-        statuses: [0, 200], // Cache responses with status 0 or 200
+        statuses: [0, 200],
       }),
     ],
   })
 );
+
+// Cache navigations and documents with NetworkFirst strategy
 registerRoute(
-  // Match all navigation requests
   ({ request }) => request.mode === 'navigate' || request.destination === 'document',
   new NetworkFirst({
-    cacheName: 'react-pages-v4', // Name of the cache
+    cacheName: 'react-pages-v4',
     plugins: [
       {
         cacheWillUpdate: async ({ response }) => {
@@ -53,83 +63,57 @@ registerRoute(
     ],
   })
 );
-setCatchHandler(async ({ event }) => {
-  // Check the type of request and return appropriate fallback
-  if (event.request.destination === 'document' || event.request.mode === 'navigate') {
-    console.log("Redirecting to root (/)");
 
-    // Redirect to the root of the app (or the first entry page)
-    return Response.redirect('/');  // You can modify '/' to any entry point like `/home` or `/index.html`
+// Catch handler for failed requests
+setCatchHandler(async ({ event }) => {
+  if (event.request.destination === 'document' || event.request.mode === 'navigate') {
+    console.log("Redirecting to root (fallback navigation).");
+    return caches.match('/'); // Fallback to root cached page
   } else if (event.request.destination === 'image') {
-    // Fallback for images
-    return  console.log("not cached images asked")
+    console.log("Fallback: image not found in cache.");
+    return null; // No fallback for images
   } else if (event.request.destination === 'style' || event.request.destination === 'script') {
-    // Ignore errors for scripts and styles
-    return null;
+    console.log("Skipping style/script fallback.");
+    return null; // No fallback for styles/scripts
   } else {
-    // Default response for other types of requests
     return Response.error();
   }
 });
+
+// Activate event to clean old caches
 self.addEventListener('activate', (event) => {
-  const cacheWhitelist = ['image-cache-v4', 'react-pages-v4']; // Custom cache names
+  const cacheWhitelist = ['image-cache-v4', 'react-pages-v4', 'static-assets4'];
 
   event.waitUntil(
-    Promise.all([
-      caches.keys().then((cacheNames) => {
-        return Promise.all(
-          cacheNames.map((cacheName) => {
-            // Remove caches not in whitelist
-            if (
-              !cacheWhitelist.includes(cacheName) &&
-              !cacheName.startsWith('workbox-') // Preserve Workbox caches
-            ) {
-              return caches.delete(cacheName);
-            }
-          })
-        );
-      }),
-
-      // Force network request for the entry page
-      fetch('/')
-        .then((response) => {
-          if (response.ok) {
-            return caches.open('react-pages-v4').then((cache) => {
-              console.log('Caching updated entry page.');
-              return cache.put('/', response);
-            });
-          } else {
-            console.warn('Failed to fetch the entry page during activation.');
-            return Promise.resolve();
+    (async () => {
+      const cacheNames = await caches.keys();
+      // Delete outdated caches
+      await Promise.all(
+        cacheNames.map((cacheName) => {
+          if (!cacheWhitelist.includes(cacheName) && !cacheName.startsWith('workbox-')) {
+            console.log(`Deleting old cache: ${cacheName}`);
+            return caches.delete(cacheName);
           }
         })
-        .catch((error) => {
-          console.error('Error fetching the entry page:', error);
-        }),
-    ])
+      );
+
+      // Precache the root entry page
+      try {
+        const cache = await caches.open('react-pages-v4');
+        const response = await fetch('/');
+        if (response.ok) {
+          console.log('Caching updated entry page.');
+          await cache.put('/', response.clone());
+          self.clients.claim().then(() => {
+            console.log('New Service Worker now controlling all clients.');
+          })
+        } else {
+          console.warn(`Failed to fetch root entry page: ${response.status}`);
+        }
+      } catch (error) {
+        console.error('Error caching the root entry page:', error);
+        console.log("new");
+      }
+    })()
   );
 });
-
-// self.addEventListener('activate', (event) => {
-//   const cacheWhitelist = ['image-cache-v4','react-pages-v4']; // Your custom cache name
-
-//   event.waitUntil(
-//     caches.keys().then((cacheNames) => {
-//       return Promise.all(
-//         cacheNames.map((cacheName) => {
-//           // Check if the cache is in the whitelist or matches Workbox's naming pattern
-//           if (
-//             !cacheWhitelist.includes(cacheName) &&
-//             !cacheName.startsWith('workbox-') 
-            
-//             // Preserve Workbox caches
-//           ) {
-//             return caches.delete(cacheName); // Delete outdated caches
-//           }
-//         })
-//       );
-//     })
-//   );
-// });
-
-

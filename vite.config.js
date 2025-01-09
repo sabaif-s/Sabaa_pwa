@@ -1,50 +1,61 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  build:{
-    outDir:"dist",
-    manifest:true,
+  build: {
+    outDir: 'dist',
+    manifest: true,
     rollupOptions: {
       output: {
+        entryFileNames: 'assets/[name].[hash].js', // Add unique hashes for entry files
+        chunkFileNames: 'assets/[name].[hash].js', // Add unique hashes for chunk files
+        assetFileNames: 'assets/[name].[hash].[ext]', // Add unique hashes for other assets
         manualChunks: {
           pdfjs: ['pdfjs-dist'], // Separate PDF.js into its own chunk
         },
       },
     },
-
   },
   plugins: [
     react({
       fastRefresh: true, // Ensure fastRefresh is enabled
     }),
-    
     viteStaticCopy({
       targets: [
         {
-          src: 'src/sw.js', // Source file
+          src: 'src/sw.js', // Source service worker file
           dest: '', // Destination folder relative to `dist/`
         },
       ],
     }),
     VitePWA({
-      strategies: 'injectManifest',
+      strategies: 'injectManifest', // Use your custom service worker
       srcDir: 'src',
-      filename: 'sw.js',
-      registerType: 'prompt',// Ensures auto-updates are checked and applied
+      filename: 'sw.js', // Service worker filename
+      registerType: 'prompt', // Ensure user is prompted for updates
       workbox: {
         cleanupOutdatedCaches: true,
-        clientsClaim: true, // Controls the client pages right after the SW activates
-        skipWaiting: true, // Removes outdated caches
+        clientsClaim: true, // Claim client pages immediately after activation
+        skipWaiting: true, // Skip waiting and activate immediately
       },
-       // Register the service worker with auto update
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png','next.png' ,'mask-icon.svg','download.png','alarm.png','vite.svg','alarmNotify.jpg','rb_68784_11zon.jpg','sabk.jpeg'], // Include assets like icons
+      includeAssets: [
+        'favicon.ico',
+        'apple-touch-icon.png',
+        'next.png',
+        'mask-icon.svg',
+        'download.png',
+        'alarm.png',
+        'vite.svg',
+        'alarmNotify.jpg',
+        'rb_68784_11zon.jpg',
+        'sabk.jpeg',
+      ], // Include these assets in the PWA precache
       manifest: {
         name: 'Vite PWA Project',
-        short_name: 'Vite PWA Project',
+        short_name: 'Vite PWA',
         theme_color: '#ffffff',
         icons: [
           {
@@ -71,11 +82,8 @@ export default defineConfig({
           },
         ],
       },
-      // injectManifest: {
-      //   swSrc: './src/sw.js', // Path to your custom service worker file
-      // }, // Prevent default service worker generation
     }),
   ],
   assetsInclude: ['**/*.MOV'],
   base: '/',
-})
+});

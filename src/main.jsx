@@ -13,35 +13,108 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
 pdfjsLib.GlobalWorkerOptions.verbosity = pdfjsLib.VerbosityLevel.INFOS;
 
 // Register the service worker using registerSW
-const updateSW = registerSW({
-  onNeedRefresh() {
-    const userConfirmed = confirm('A new version is available. Do you want to refresh the app?');
-    let newWorker;
-    if (userConfirmed) {
-      if (userConfirmed) {
-        newWorker.postMessage({ action: 'skipWaiting' });
-      }
-      
-      updateSW(true); // Activates the new service worker
-    }
-  },
-  onOfflineReady() {
-    console.log('The app is ready to work offline.');
-  },
-});
+ // Define a variable to hold the new Service Worker
+ if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js')
+    .then((registration) => {
+      console.log('Service Worker registered with scope:', registration.scope);
 
+      // Listen for updates to the Service Worker
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+
+        if (newWorker) {
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed') {
+              if (navigator.serviceWorker.controller) {
+                console.log('New Service Worker found and ready to activate.');
+
+                // Prompt the user or skip waiting programmatically
+                if (confirm('New version available. Do you want to update?')) {
+                  // Send the "SKIP_WAITING" message
+                  newWorker.postMessage({ action: 'SKIP_WAITING' });
+                }
+              } else {
+                console.log('Service Worker installed for the first time.');
+              }
+            }
+          });
+        }
+      });
+    })
+    .catch((error) => {
+      console.error('Service Worker registration failed:', error);
+    });
+
+  // Reload the page when the controller changes
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    console.log('Service Worker updated, reloading page...');
+    window.location.reload();
+  });
+}
+
+// const updateSW = registerSW({
+//   onNeedRefresh() {
+//      // Assign the new Service Worker instance to `newWorker`
+    
+//     const userConfirmed = confirm('A new version is available. Do you want to refresh the app?');
+//     if (userConfirmed ) {
+     
+//       // Send a message to the new Service Worker to skip waiting
+       
+//       // Activate the new Service Worker
+//       updateSW(); // Activates the new service worker
+//     }
+//   },
+//   onOfflineReady() {
+//     console.log('The app is ready to work offline.');
+//   },
+// });
+if("saboo"){
+  console.log("saboo");
+}
+if("saboo"){
+  console.log("saboo");
+}
+if("saboo"){
+  console.log("saboo");
+}
+if("saboo"){
+  console.log("saboo");
+}
+if("saboo"){
+  console.log("saboo");
+}
+if("saboo"){
+  console.log("saboo");
+}
+if("saboo"){
+  console.log("saboo");
+}
+if("saboo"){
+  console.log("saboo");
+}
+if("saboo"){
+  console.log("saboo");
+}
+if("saboo"){
+  console.log("saboo");
+}
+if("saboo"){
+  console.log("saboo");
+}
+if("saboo"){
+  console.log("saboo");
+}
+if("saboo"){
+  console.log("saboo");
+}
 // Reload the page when back online
 window.addEventListener('online', () => {
   console.log('Back online, refreshing...');
   window.location.reload();
 });
-  if(5 > 2){
-    console.log("its true");
-  }
-  else{
-    console.log("its false");
-    console.log("new false");
-  }
+
 // Render the React application
 createRoot(document.getElementById('root')).render(
   <StrictMode>
