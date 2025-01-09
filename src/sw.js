@@ -72,25 +72,64 @@ setCatchHandler(async ({ event }) => {
   }
 });
 self.addEventListener('activate', (event) => {
-  const cacheWhitelist = ['image-cache-v4','react-pages-v4']; // Your custom cache name
+  const cacheWhitelist = ['image-cache-v4', 'react-pages-v4']; // Custom cache names
 
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          // Check if the cache is in the whitelist or matches Workbox's naming pattern
-          if (
-            !cacheWhitelist.includes(cacheName) &&
-            !cacheName.startsWith('workbox-') 
-            
-            // Preserve Workbox caches
-          ) {
-            return caches.delete(cacheName); // Delete outdated caches
+    Promise.all([
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            // Remove caches not in whitelist
+            if (
+              !cacheWhitelist.includes(cacheName) &&
+              !cacheName.startsWith('workbox-') // Preserve Workbox caches
+            ) {
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      }),
+
+      // Force network request for the entry page
+      fetch('/')
+        .then((response) => {
+          if (response.ok) {
+            return caches.open('react-pages-v4').then((cache) => {
+              console.log('Caching updated entry page.');
+              return cache.put('/', response);
+            });
+          } else {
+            console.warn('Failed to fetch the entry page during activation.');
+            return Promise.resolve();
           }
         })
-      );
-    })
+        .catch((error) => {
+          console.error('Error fetching the entry page:', error);
+        }),
+    ])
   );
 });
+
+// self.addEventListener('activate', (event) => {
+//   const cacheWhitelist = ['image-cache-v4','react-pages-v4']; // Your custom cache name
+
+//   event.waitUntil(
+//     caches.keys().then((cacheNames) => {
+//       return Promise.all(
+//         cacheNames.map((cacheName) => {
+//           // Check if the cache is in the whitelist or matches Workbox's naming pattern
+//           if (
+//             !cacheWhitelist.includes(cacheName) &&
+//             !cacheName.startsWith('workbox-') 
+            
+//             // Preserve Workbox caches
+//           ) {
+//             return caches.delete(cacheName); // Delete outdated caches
+//           }
+//         })
+//       );
+//     })
+//   );
+// });
 
 
